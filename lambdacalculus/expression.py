@@ -1,10 +1,9 @@
 __all__ = ["Expression", "Natural", "Bool"]
 
-class Expression:
+class Expression(object):
 
-    def __init__(self, value, e_type):
+    def __init__(self, value):
         self._value = value
-        self._e_type = e_type
 
     def value(self):
         return self._value
@@ -18,8 +17,7 @@ class Expression:
 class Natural(Expression):
 
     def __init__(self, value):
-        self._value = value
-        self._e_type = 'nat'
+        super(Natural,self).__init__(value)
 
     def succ(self):
        return Natural(self._value + 1)
@@ -33,8 +31,7 @@ class Natural(Expression):
 class Bool(Expression):
 
     def __init__(self, value):
-        self._value = value
-        self._e_type = 'bool'
+        super(Bool,self).__init__(value)
 
     def ifelse(self, expr_if_true, expr_if_false):
         return expr_if_true if self._value else expr_if_false
