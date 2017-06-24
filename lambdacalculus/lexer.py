@@ -1,5 +1,6 @@
 #! coding: utf-8
 import ply.lex as lex
+from expression import Expression, Natural
 
 """
 Lista de tokens
@@ -23,19 +24,28 @@ tokens = (
     'BOOL',
     'NAT',
     'VAR',
-    'TYPE'
+    'TYPE',
+    'SUCC_OPEN',
+    'PAR_OPEN',
+    'PAR_CLOSE'
 )
 
+t_PAR_OPEN = r'\('
+t_PAR_CLOSE = r'\)'
 t_ignore = ' \t'
+
+def t_SUCC_OPEN(t):
+    r'succ\('
+    return t
 
 def t_BOOL(t):
     r'true|false'
-    t.value = True if t.value == 'true' else False
+    t.value = Expression(True if t.value == 'true' else False, 'bool')
     return t
 
 def t_NAT(t):
     r'\d+'
-    t.value = int(t.value)
+    t.value = Natural(int(t.value))
     return t
 
 def t_TYPE(t):
