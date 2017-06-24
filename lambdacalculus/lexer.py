@@ -79,6 +79,7 @@ def t_TYPE(t):
 
 def t_VAR(t):
     r'[a-z]\w*'
+    t.value = Variable(t.value)
     return t
 
 # Build the lexer

@@ -1,4 +1,4 @@
-__all__ = ["Expression", "Natural", "Bool"]
+__all__ = ["Expression", "Natural", "Bool", "Abstraction", "Variable", "Succ"]
 
 class Expression(object):
 
@@ -11,16 +11,13 @@ class Expression(object):
     def e_type(self):
         return self._e_type
 
-    def __repr__(self):
+    def __str__(self):
         return str(self._value)
 
 class Natural(Expression):
 
     def __init__(self, value):
         super(Natural,self).__init__(value)
-
-    def succ(self):
-       return Natural(self._value + 1)
 
     def pred(self):
         return Natural(max(self._value - 1, 0))
@@ -36,4 +33,28 @@ class Bool(Expression):
     def ifelse(self, expr_if_true, expr_if_false):
         return expr_if_true if self._value else expr_if_false
 
+class Abstraction(Expression):
 
+    def __init__(self, value):
+        super(Bool,self).__init__(value)
+
+class Variable(Expression):
+
+    def __init__(self, name):
+        self._name = name
+
+    def __str__(self):
+        return self._name
+
+    def substitute(self, varName, exp):
+        return exp if varName == self._name else self
+
+class Succ(Expression):
+    def __init__(self, subexp):
+        self._subexp = subexp
+
+    def __str__(self):
+        return "succ(" + str(self._subexp) + ")"
+
+    def substitute(self, varName, exp):
+        return Succ(self._subexp.substitute(varName,exp))

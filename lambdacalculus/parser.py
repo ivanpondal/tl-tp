@@ -1,6 +1,7 @@
 """Parser LR(1) de calculadora."""
 import ply.yacc as yacc
 from .lexer import tokens
+from expression import *
 
 #def p_expression_0_abstraction(p):
 #    'expression_0 : expression_0 expression_1'
@@ -11,7 +12,7 @@ def p_expression_parenthesis(p):
 
 def p_expression_succ(p):
     'expression : SUCC_OPEN expression PAR_CLOSE'
-    p[0] = p[2].succ()
+    p[0] = Succ(p[2])
 
 def p_expression_pred(p):
     'expression : PRED_OPEN expression PAR_CLOSE'
@@ -24,6 +25,10 @@ def p_expression_iszero(p):
 def p_expression_ifthenelse(p):
     'expression : IF expression THEN expression ELSE expression'
     p[0] = p[2].ifelse(p[4],p[6])
+
+#def p_expression_lambda(p):
+#    'expression : LAMBDA VAR COLON type DOT expression'
+#    p[0] = Abstraction(p[2],p[4],p[6])
 
 def p_expression_nat(p):
     'expression : NAT'
