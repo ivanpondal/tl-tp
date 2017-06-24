@@ -9,6 +9,18 @@ def p_expression_succ(p):
     'expression : SUCC_OPEN expression PAR_CLOSE'
     p[0] = p[2].succ()
 
+def p_expression_pred(p):
+    'expression : PRED_OPEN expression PAR_CLOSE'
+    p[0] = p[2].pred()
+
+def p_expression_iszero(p):
+    'expression : ISZERO_OPEN expression PAR_CLOSE'
+    p[0] = p[2].iszero()
+
+def p_expression_ifthenelse(p):
+    'expression : IF expression THEN expression ELSE expression'
+    p[0] = p[2].ifelse(p[4],p[6])
+
 def p_expression_nat(p):
     'expression : NAT'
     p[0] = p[1]
