@@ -5,6 +5,10 @@ from .lexer import tokens
 #def p_expression_0_abstraction(p):
 #    'expression_0 : expression_0 expression_1'
 
+def p_expression_parenthesis(p):
+    'expression : PAR_OPEN expression PAR_CLOSE'
+    p[0] = p[2]
+
 def p_expression_succ(p):
     'expression : SUCC_OPEN expression PAR_CLOSE'
     p[0] = p[2].succ()
