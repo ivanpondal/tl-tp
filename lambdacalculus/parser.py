@@ -1,4 +1,5 @@
-"""Parser LR(1) de calculadora."""
+#! coding: utf-8
+"""Parser LR(1) de cálculo lambda."""
 import ply.yacc as yacc
 from .lexer import tokens
 from expression import *
@@ -16,15 +17,15 @@ def p_expression_succ(p):
 
 def p_expression_pred(p):
     'expression : PRED_OPEN expression PAR_CLOSE'
-    p[0] = p[2].pred()
+    p[0] = Pred(p[2])
 
 def p_expression_iszero(p):
     'expression : ISZERO_OPEN expression PAR_CLOSE'
-    p[0] = p[2].iszero()
+    p[0] = IsZero([2])
 
 def p_expression_ifthenelse(p):
     'expression : IF expression THEN expression ELSE expression'
-    p[0] = p[2].ifelse(p[4],p[6])
+    p[0] = IfThenElse(p[2],p[4],p[6])
 
 #def p_expression_lambda(p):
 #    'expression : LAMBDA VAR COLON type DOT expression'
@@ -36,6 +37,10 @@ def p_expression_nat(p):
 
 def p_expression_bool(p):
     'expression : BOOL'
+    p[0] = p[1]
+
+def p_expression_var(p):
+    'expression : VAR'
     p[0] = p[1]
 
 def p_error(p):

@@ -5,4 +5,5 @@ while True:
         exp_str = raw_input('labdacalculus> ')
     except EOFError:
         break
-    print(parser.apply_parser(exp_str))
+    ast = parser.apply_parser(exp_str)
+    print(str(ast.reduce()) + " " + str(ast))
