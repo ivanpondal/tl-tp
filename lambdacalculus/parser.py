@@ -31,8 +31,8 @@ def p_expression_ifthenelse(p):
 #    'expression : LAMBDA VAR COLON type DOT expression'
 #    p[0] = Abstraction(p[2],p[4],p[6])
 
-def p_expression_nat(p):
-    'expression : NAT'
+def p_expression_zero(p):
+    'expression : ZERO'
     p[0] = p[1]
 
 def p_expression_bool(p):

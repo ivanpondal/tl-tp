@@ -22,7 +22,7 @@ muestra aquí abajo.
 
 tokens = (
     'BOOL',
-    'NAT',
+    'ZERO',
     'VAR',
     'TYPE',
     'SUCC_OPEN',
@@ -68,8 +68,8 @@ def t_BOOL(t):
     t.value = Bool(True if t.value == 'true' else False)
     return t
 
-def t_NAT(t):
-    r'\d+'
+def t_ZERO(t):
+    r'0'
     t.value = Natural(int(t.value))
     return t
 
