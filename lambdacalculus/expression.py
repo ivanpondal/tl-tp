@@ -71,6 +71,9 @@ class Succ(Expression):
     def reduce(self):
         return self._subexp.reduce().succ()
 
+    def succ(self):
+        return self
+
 class Pred(Expression):
     def __init__(self, subexp):
         self._subexp = subexp
@@ -83,6 +86,9 @@ class Pred(Expression):
 
     def reduce(self):
         return self._subexp.pred()
+
+    def succ(self):
+        return self._subexp
 
 class IsZero(Expression):
     def __init__(self, subexp):

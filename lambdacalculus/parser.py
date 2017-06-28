@@ -13,7 +13,7 @@ def p_expression_parenthesis(p):
 
 def p_expression_succ(p):
     'expression : SUCC_OPEN expression PAR_CLOSE'
-    p[0] = Succ(p[2])
+    p[0] = Succ(p[2]).reduce()
 
 def p_expression_pred(p):
     'expression : PRED_OPEN expression PAR_CLOSE'
