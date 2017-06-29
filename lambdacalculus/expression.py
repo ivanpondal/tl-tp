@@ -25,7 +25,7 @@ class Bool(Expression):
     def __init__(self, value):
         super(Bool,self).__init__(value)
 
-    def ifelse(self, expr_if_true, expr_if_false):
+    def if_else(self, expr_if_true, expr_if_false):
         return expr_if_true if self._value else expr_if_false
 
     def reduce(self):
@@ -123,22 +123,20 @@ class IsZero(Expression):
         return self._subexp.iszero()
 
 class IfThenElse(Expression):
-    def __init__(self, condition, value_if_true, value_if_false):
+    def __init__(self, condition, expr_if_true, expr_if_false):
         self._condition = condition
-        self._value_if_true = value_if_true
-        self._value_if_false = value_if_false
+        self._expr_if_true = expr_if_true
+        self._expr_if_false = expr_if_false
 
     def __str__(self):
         return "if " + str(self._condition) + " then " + \
-                str(self._value_if_true) + " else " + \
-                str(self._value_if_false)
+                str(self._expr_if_true) + " else " + \
+                str(self._expr_if_false)
 
     def substitute(self, varName, exp):
         return IfThenElse(self._condition.substitute(varName, exp),
-                          self._value_if_true.substitute(varName, exp),
-                          self._value_if_false.substitue(varName, exp))
+                          self._expr_if_true.substitute(varName, exp),
+                          self._expr_if_false.substitue(varName, exp))
 
-    def reduce(self):
-        return self._condition.ifelse(self._value_if_true, self._value_if_false)
-
-
+    def if_else(self, expr_if_true, expr_if_false):
+        return self

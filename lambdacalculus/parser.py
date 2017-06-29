@@ -25,7 +25,7 @@ def p_expression_iszero(p):
 
 def p_expression_ifthenelse(p):
     'expression : IF expression THEN expression ELSE expression'
-    p[0] = IfThenElse(p[2],p[4],p[6])
+    p[0] = p[2].if_else(p[4], p[6])
 
 #def p_expression_lambda(p):
 #    'expression : LAMBDA VAR COLON type DOT expression'
