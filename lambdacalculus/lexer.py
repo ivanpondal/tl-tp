@@ -28,14 +28,12 @@ tokens = (
     'SUCC_OPEN',
     'PRED_OPEN',
     'ISZERO_OPEN',
-    'PAR_OPEN',
     'PAR_CLOSE',
     'IF',
     'THEN',
     'ELSE'
 )
 
-t_PAR_OPEN = r'\('
 t_PAR_CLOSE = r'\)'
 t_ignore = ' \t'
 
@@ -65,7 +63,7 @@ def t_ELSE(t):
 
 def t_BOOL(t):
     r'true|false'
-    t.value = Bool(True if t.value == 'true' else False)
+    t.value = BoolExp(True if t.value == 'true' else False)
     return t
 
 def t_ZERO(t):

@@ -36,6 +36,12 @@ class TestsLambdaCalculus(TestCase):
 	def test_false(self):
 		self.assertEquals('false:Bool',strParse('false'))
 
+	def test_isZero_zero(self):
+		self.assertEquals('true:Bool',strParse('iszero(0)'))
+
+	def test_isZero_nonZero(self):
+		self.assertEquals('true:Bool',strParse('iszero(succ(succ(0)))'))
+
 	#TODO: IF
 
 	# Abstraction Tests

@@ -1,4 +1,6 @@
-__all__ = ["Expression", "Zero", "Bool", "Abstraction", "Variable", "Succ"]
+from sets import Set
+
+__all__ = ["Expression", "Zero", "BoolExp", "Abstraction", "Variable", "Succ"]
 
 tNat = 'Nat'
 tBool = 'Bool'
@@ -8,6 +10,7 @@ class Expression(object):
     def __init__(self, value):
         self._value = value
         self._type = "NoType"
+        self._freeVars = Set([])
 
     def value(self):
         return self._value
@@ -21,13 +24,15 @@ class Expression(object):
     def strWithType(self):
         return str(self) + ":" + str(self._type)
 
-class Bool(Expression):
+class BoolExp(Expression):
 
     def __init__(self, value):
-        super(Bool,self).__init__(value)
+        super(BoolExp,self).__init__(value)
         self._type = tBool
 
-    def ifelse(self, expr_if_true, expr_if_false):
+    def ifElseReduce(self, expr_if_true, expr_if_false):
+        # Precondition: self represents either a true or a false, reduced, final.
+        # so if someone does if self then .... I now have to reduce, and choose the subexpression.
         return expr_if_true if self._value else expr_if_false
 
     def __str__(self):
@@ -37,7 +42,7 @@ class Bool(Expression):
 class Abstraction(Expression):
 
     def __init__(self, value):
-        super(Bool,self).__init__(value)
+        super(Abstraction,self).__init__(value)
 
 class Variable(Expression):
 
@@ -49,6 +54,12 @@ class Variable(Expression):
 
     def substitute(self, varName, exp):
         return exp if varName == self._name else self
+
+    def ifElseReduce(self, expr_if_true, expr_if_false):
+        # TODO: Blow Up if type is not correct
+        # Precondition: self is a variable, it could be anything.
+        # So if someone does if var then .... We need to construct the expression tree
+        return IfThenElse(self, expr_if_true, expr_if_false)
 
 class Zero(Expression):
     def __init__(self):
@@ -68,6 +79,11 @@ class Zero(Expression):
         # So pred operation should make no change.
         # Poscondition: I return "0".
         return self
+
+    def isZero(self):
+        # Precondition: self represents "0"
+        # so i'm zero.
+        return BoolExp(True)
 
 class Succ(Expression):
     def __init__(self, subexp):
@@ -92,6 +108,11 @@ class Succ(Expression):
         # Poscondition: I return the subexpression tree, therefore reduced
         return self._subexp
 
+    def isZero(self):
+        # Precondition: self represents "succ(E)", reduced.
+        # so if someone asks if I'm zero, I depend on the free vars.
+        return BoolExp(False) if len(self._freeVars) == 0 else IsZero(self)
+
 class Pred(Expression):
     def __init__(self, subexp):
         self._subexp = subexp
@@ -115,6 +136,12 @@ class Pred(Expression):
         # Poscondition: I return the new expression tree, also reduced.
         return Pred(self)
 
+    def isZero(self):
+        # Precondition: self represents "pred(E)", reduced.
+        # so if someone asks if I'm zero, I need to evaluate completely.
+        # My only choice is to grow the expression tree:
+        return IsZero(self)
+
 class IsZero(Expression):
     def __init__(self, subexp):
         self._subexp = subexp
@@ -124,9 +151,6 @@ class IsZero(Expression):
 
     def substitute(self, varName, exp):
         return IsZero(self._subexp.substitute(varName,exp))
-
-    def reduce(self):
-        return self._subexp.iszero()
 
 class IfThenElse(Expression):
     def __init__(self, condition, value_if_true, value_if_false):
