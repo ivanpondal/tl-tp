@@ -13,11 +13,11 @@ def p_expression_parenthesis(p):
 
 def p_expression_succ(p):
     'expression : SUCC_OPEN expression PAR_CLOSE'
-    p[0] = Succ(p[2]).reduce()
+    p[0] = p[2].succAndReduce()
 
 def p_expression_pred(p):
     'expression : PRED_OPEN expression PAR_CLOSE'
-    p[0] = Pred(p[2])
+    p[0] = p[2].predAndReduce()
 
 def p_expression_iszero(p):
     'expression : ISZERO_OPEN expression PAR_CLOSE'
@@ -44,7 +44,7 @@ def p_expression_var(p):
     p[0] = p[1]
 
 def p_error(p):
-    print("Hubo un error en el parseo." + str(p))
+    print("================\nHubo un error en el parseo:\n" + str(p) + "\n================\n")
 
     parser.restart()
 

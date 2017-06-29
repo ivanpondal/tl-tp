@@ -70,7 +70,7 @@ def t_BOOL(t):
 
 def t_ZERO(t):
     r'0'
-    t.value = Natural(int(t.value))
+    t.value = Zero()
     return t
 
 def t_TYPE(t):

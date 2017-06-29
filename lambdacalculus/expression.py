@@ -1,9 +1,12 @@
-__all__ = ["Expression", "Natural", "Bool", "Abstraction", "Variable", "Succ"]
+__all__ = ["Expression", "Zero", "Bool", "Abstraction", "Variable", "Succ"]
+
+Nat = 'Nat'
 
 class Expression(object):
 
     def __init__(self, value):
         self._value = value
+        self._type = "NoType"
 
     def value(self):
         return self._value
@@ -14,22 +17,8 @@ class Expression(object):
     def __str__(self):
         return str(self._value)
 
-class Natural(Expression):
-
-    def __init__(self, value):
-        super(Natural,self).__init__(value)
-
-    def succ(self):
-        return Natural(self._value + 1)
-
-    def pred(self):
-        return Natural(max(self._value - 1, 0))
-
-    def iszero(self):
-        return Bool(self._value == 0)
-
-    def reduce(self):
-        return self
+    def strWithType(self):
+        return str(self) + ":" + str(self._type)
 
 class Bool(Expression):
 
@@ -58,9 +47,29 @@ class Variable(Expression):
     def substitute(self, varName, exp):
         return exp if varName == self._name else self
 
+class Zero(Expression):
+    def __init__(self):
+        self._type = Nat
+
+    def __str__(self):
+        return "0"
+
+    def succAndReduce(self):
+        # Precondition: self represents "0".
+        # So succ operation should make the tree grow.
+        # Poscondition: I return the new expression tree, also reduced.
+        return Succ(self)
+
+    def predAndReduce(self):
+        # Precondition: self represents "0".
+        # So pred operation should make no change.
+        # Poscondition: I return "0".
+        return self
+
 class Succ(Expression):
     def __init__(self, subexp):
         self._subexp = subexp
+        self._type = Nat
 
     def __str__(self):
         return "succ(" + str(self._subexp) + ")"
@@ -68,15 +77,22 @@ class Succ(Expression):
     def substitute(self, varName, exp):
         return Succ(self._subexp.substitute(varName,exp))
 
-    def reduce(self):
-        return self._subexp.reduce().succ()
+    def succAndReduce(self):
+        # Precondition: self represents "succ(E)", reduced.
+        # So succ operation should make the tree grow.
+        # Poscondition: I return the new expression tree, also reduced.
+        return Succ(self)
 
-    def succ(self):
-        return self
+    def predAndReduce(self):
+        # Precondition: self represents "succ(E)", reduced.
+        # then doing pred(succ(E)) => E
+        # Poscondition: I return the subexpression tree, therefore reduced
+        return self._subexp
 
 class Pred(Expression):
     def __init__(self, subexp):
         self._subexp = subexp
+        self._type = Nat
 
     def __str__(self):
         return "pred(" + str(self._subexp) + ")"
@@ -87,7 +103,10 @@ class Pred(Expression):
     def reduce(self):
         return self._subexp.pred()
 
-    def succ(self):
+    def succAndReduce(self):
+        # Precondition: self represents "pred(E)", reduced.
+        # Then doing succ(pred(E)) => E
+        # Postcondition: I return the subexpression tree, therefore reduced.
         return self._subexp
 
 class IsZero(Expression):
