@@ -7,13 +7,9 @@ tBool = 'Bool'
 
 class Expression(object):
 
-    def __init__(self, value):
-        self._value = value
+    def __init__(self):
         self._type = "NoType"
         self._freeVars = Set([])
-
-    def value(self):
-        return self._value
 
     def e_type(self):
         return self._e_type
@@ -27,7 +23,8 @@ class Expression(object):
 class BoolExp(Expression):
 
     def __init__(self, value):
-        super(BoolExp,self).__init__(value)
+        super(BoolExp,self).__init__()
+        self._value = value
         self._type = tBool
 
     def ifElseReduce(self, expr_if_true, expr_if_false):
@@ -42,11 +39,12 @@ class BoolExp(Expression):
 class Abstraction(Expression):
 
     def __init__(self, value):
-        super(Abstraction,self).__init__(value)
+        super(Abstraction,self).__init__()
 
 class Variable(Expression):
 
     def __init__(self, name):
+        super(Variable,self).__init__()
         self._name = name
 
     def __str__(self):
@@ -63,6 +61,7 @@ class Variable(Expression):
 
 class Zero(Expression):
     def __init__(self):
+        super(Zero,self).__init__()
         self._type = tNat
 
     def __str__(self):
@@ -87,6 +86,7 @@ class Zero(Expression):
 
 class Succ(Expression):
     def __init__(self, subexp):
+        super(Succ,self).__init__()
         self._subexp = subexp
         self._type = tNat
 
@@ -115,6 +115,7 @@ class Succ(Expression):
 
 class Pred(Expression):
     def __init__(self, subexp):
+        super(Pred,self).__init__()
         self._subexp = subexp
         self._type = tNat
 
@@ -144,6 +145,7 @@ class Pred(Expression):
 
 class IsZero(Expression):
     def __init__(self, subexp):
+        super(IsZero,self).__init__()
         self._subexp = subexp
 
     def __str__(self):
@@ -154,6 +156,7 @@ class IsZero(Expression):
 
 class IfThenElse(Expression):
     def __init__(self, condition, value_if_true, value_if_false):
+        super(IfThenElse,self).__init__()
         self._condition = condition
         self._value_if_true = value_if_true
         self._value_if_false = value_if_false

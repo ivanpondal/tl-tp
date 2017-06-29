@@ -40,7 +40,7 @@ class TestsLambdaCalculus(TestCase):
 		self.assertEquals('true:Bool',strParse('iszero(0)'))
 
 	def test_isZero_nonZero(self):
-		self.assertEquals('true:Bool',strParse('iszero(succ(succ(0)))'))
+		self.assertEquals('false:Bool',strParse('iszero(succ(succ(0)))'))
 
 	#TODO: IF
 
