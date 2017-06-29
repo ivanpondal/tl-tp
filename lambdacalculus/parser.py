@@ -6,19 +6,19 @@ from expression import *
 
 def p_expression_succ(p):
     'expression : SUCC_OPEN expression PAR_CLOSE'
-    p[0] = p[2].succAndReduce()
+    p[0] = p[2].succ()
 
 def p_expression_pred(p):
     'expression : PRED_OPEN expression PAR_CLOSE'
-    p[0] = p[2].predAndReduce()
+    p[0] = p[2].pred()
 
 def p_expression_iszero(p):
     'expression : ISZERO_OPEN expression PAR_CLOSE'
-    p[0] = p[2].isZero()
+    p[0] = p[2].is_zero()
 
 def p_expression_ifthenelse(p):
     'expression : IF expression THEN expression ELSE expression'
-    p[0] = p[2].ifElseReduce(p[4],p[6])
+    p[0] = p[2].if_else(p[4], p[6])
 
 #def p_expression_lambda(p):
 #    'expression : LAMBDA VAR COLON type DOT expression'
