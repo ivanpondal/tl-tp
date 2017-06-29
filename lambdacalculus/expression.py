@@ -1,6 +1,7 @@
 __all__ = ["Expression", "Zero", "Bool", "Abstraction", "Variable", "Succ"]
 
-Nat = 'Nat'
+tNat = 'Nat'
+tBool = 'Bool'
 
 class Expression(object):
 
@@ -24,12 +25,14 @@ class Bool(Expression):
 
     def __init__(self, value):
         super(Bool,self).__init__(value)
+        self._type = tBool
 
     def ifelse(self, expr_if_true, expr_if_false):
         return expr_if_true if self._value else expr_if_false
 
-    def reduce(self):
-        return self
+    def __str__(self):
+        return str(self._value).lower()
+
 
 class Abstraction(Expression):
 
@@ -49,7 +52,7 @@ class Variable(Expression):
 
 class Zero(Expression):
     def __init__(self):
-        self._type = Nat
+        self._type = tNat
 
     def __str__(self):
         return "0"
@@ -69,7 +72,7 @@ class Zero(Expression):
 class Succ(Expression):
     def __init__(self, subexp):
         self._subexp = subexp
-        self._type = Nat
+        self._type = tNat
 
     def __str__(self):
         return "succ(" + str(self._subexp) + ")"
@@ -92,7 +95,7 @@ class Succ(Expression):
 class Pred(Expression):
     def __init__(self, subexp):
         self._subexp = subexp
-        self._type = Nat
+        self._type = tNat
 
     def __str__(self):
         return "pred(" + str(self._subexp) + ")"
@@ -100,14 +103,17 @@ class Pred(Expression):
     def substitute(self, varName, exp):
         return Pred(self._subexp.substitute(varName,exp))
 
-    def reduce(self):
-        return self._subexp.pred()
-
     def succAndReduce(self):
         # Precondition: self represents "pred(E)", reduced.
         # Then doing succ(pred(E)) => E
         # Postcondition: I return the subexpression tree, therefore reduced.
         return self._subexp
+
+    def predAndReduce(self):
+        # Precondition: self represents "pred(E)", reduced.
+        # So pred operation should make the tree grow.
+        # Poscondition: I return the new expression tree, also reduced.
+        return Pred(self)
 
 class IsZero(Expression):
     def __init__(self, subexp):

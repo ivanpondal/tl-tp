@@ -25,6 +25,9 @@ class TestsLambdaCalculus(TestCase):
 	def test_pred_succ(self):
 		self.assertEquals('0:Nat',strParse('pred(succ(0))'))
 
+	def test_multiple_succ_pred(self):
+		self.assertEquals('0:Nat',strParse('pred(pred(succ(succ(0))))'))
+
 	# Basic Bool operations
 
 	def test_true(self):
