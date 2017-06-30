@@ -10,8 +10,11 @@ def p_expression_expression_prime(p):
 
 def p_expression_application(p):
     'expression : expression expression_prime'
-    print p[1]
     p[0] = p[1].apply(p[2])
+
+def p_expression_prime_parenthesis(p):
+    'expression_prime : PAR_OPEN expression PAR_CLOSE'
+    p[0] = p[2]
 
 def p_expression_prime_succ(p):
     'expression_prime : SUCC_OPEN expression PAR_CLOSE'

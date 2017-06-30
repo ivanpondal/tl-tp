@@ -35,10 +35,12 @@ tokens = (
     'ELSE',
     'LAMBDA',
     'COLON',
-    'DOT'
+    'DOT',
+    'PAR_OPEN'
 )
 
 t_PAR_CLOSE = r'\)'
+t_PAR_OPEN = r'\('
 t_ignore = ' \t'
 
 def t_SUCC_OPEN(t):

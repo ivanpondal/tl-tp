@@ -6,4 +6,4 @@ while True:
     except EOFError:
         break
     value = parser.apply_parser(exp_str)
-    print(value.strWithType())
+    print(value.str_with_type())

@@ -79,13 +79,13 @@ class TestsLambdaCalculus(TestCase):
     # Application tests
 
     def test_id_application_int(self):
-        self.assertEquals('0:Nat',str_parse('\\x:Nat.x 0'))
+        self.assertEquals('0:Nat',str_parse('(\\x:Nat.x) 0'))
 
     def test_id_application_bool(self):
-        self.assertEquals('false:Bool',str_parse('\\x:Bool.x false'))
+        self.assertEquals('false:Bool',str_parse('(\\x:Bool.x) false'))
 
     def test_application_repeated_variable_partial_application(self):
-        self.assertEquals('\\x:Nat.succ(x):Nat->Nat',str_parse('\\x:Nat.\\xNat.succ(x) 0'))
+        self.assertEquals('\\x:Nat.succ(x):Nat->Nat',str_parse('(\\x:Nat.\\xNat.succ(x)) 0'))
 
     def test_application_repeated_variable_total_application(self):
-        self.assertEquals('0:Nat',str_parse('\\x:Nat.\\xNat.succ(x) succ(0) 0'))
+        self.assertEquals('0:Nat',str_parse('(\\x:Nat.\\xNat.succ(x)) succ(0) 0'))
