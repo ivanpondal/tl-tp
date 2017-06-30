@@ -25,17 +25,18 @@ class TestsLambdaCalculus(TestCase):
     def test_pred_succ(self):
         self.assertEquals('0:Nat',str_parse('pred(succ(0))'))
 
-	def test_multiple_succ_pred(self):
-		self.assertEquals('0:Nat',str_parse('pred(pred(succ(succ(0))))'))
+    def test_multiple_succ_pred(self):
+        self.assertEquals('0:Nat',str_parse('pred(pred(succ(succ(0))))'))
 
-	# Basic Bool operations
+    # Basic Bool operations
 
     def test_true(self):
         self.assertEquals('true:Bool',str_parse('true'))
 
-	def test_false(self):
-		self.assertEquals('false:Bool',str_parse('false'))
-        # IsZero Tests
+    def test_false(self):
+        self.assertEquals('false:Bool',str_parse('false'))
+
+    # IsZero Tests
 
     def test_is_zero_zero(self):
         self.assertEquals('true:Bool',str_parse('iszero(0)'))
@@ -60,7 +61,6 @@ class TestsLambdaCalculus(TestCase):
     def test_if_then_else_in_abstraction(self):
          self.assertEquals('\\x:Bool.if x then 0 else succ(0):Bool->Nat', str_parse('\\x:Bool.if x then 0 else succ(0)'))
 
-
     # Abstraction Tests
 
     def test_basic_abstraction_id_bool(self):
@@ -75,7 +75,6 @@ class TestsLambdaCalculus(TestCase):
     def test_basic_abstraction_in_abstraction(self):
         self.assertEquals('\\x:Nat.\\y:Bool.x:Nat->Bool->Nat',str_parse('\\x:Nat.\\y:Bool.x'))
 
-
     # Application tests
 
     def test_id_application_int(self):
@@ -85,7 +84,7 @@ class TestsLambdaCalculus(TestCase):
         self.assertEquals('false:Bool',str_parse('(\\x:Bool.x) false'))
 
     def test_application_repeated_variable_partial_application(self):
-        self.assertEquals('\\x:Nat.succ(x):Nat->Nat',str_parse('(\\x:Nat.\\xNat.succ(x)) 0'))
+        self.assertEquals('\\x:Nat.succ(0):Nat->Nat',str_parse('(\\x:Nat.\\x:Nat.succ(x)) 0'))
 
     def test_application_repeated_variable_total_application(self):
-        self.assertEquals('0:Nat',str_parse('(\\x:Nat.\\xNat.succ(x)) succ(0) 0'))
+        self.assertEquals('succ(succ(0)):Nat', str_parse('((\\x:Nat.\\x:Nat.succ(x)) succ(0)) 0'))

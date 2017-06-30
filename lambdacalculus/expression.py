@@ -3,7 +3,6 @@ from exp_type import *
 
 __all__ = ["Expression", "Zero", "BoolExp", "Abstraction", "Variable", "Succ"]
 
-
 class Expression(object):
 
     def __init__(self):
@@ -26,27 +25,29 @@ class BoolExp(Expression):
         self._value = value
         self._type = BoolType()
 
-    def if_else(self, expr_if_true, expr_if_false):
-        return expr_if_true if self._value else expr_if_false
+    def if_else(self, if_true_expr, if_false_expr):
+        return if_true_expr if self._value else if_false_expr
 
     def __str__(self):
         return str(self._value).lower()
 
-
 class Abstraction(Expression):
 
-    def __init__(self, var, arg_type, expr_body):
+    def __init__(self, var, arg_type, body_expr):
         super(Abstraction, self).__init__()
-        self._free_vars = expr_body.free_vars() - Set([str(var)])
+        self._free_vars = body_expr.free_vars() - Set([str(var)])
         self._var = var
         self._arg_type = arg_type
-        self._expr_body = expr_body
+        self._body_expr = body_expr
 
     def apply(self, expr_arg):
-        return self._expr_body.substitute(str(self._var), expr_arg)
+        return self._body_expr.substitute(str(self._var), expr_arg)
 
     def __str__(self):
-        return '\\' + str(self._var) + '.' + str(self._arg_type) + ':' + str(self._expr_body)
+        return '\\' + str(self._var) + '.' + str(self._arg_type) + ':' + str(self._body_expr)
+
+    def substitute(self, var_name, expr):
+        return Abstraction(self._var, self._arg_type, self._body_expr.substitute(var_name, expr))
 
 class Variable(Expression):
 
@@ -64,11 +65,11 @@ class Variable(Expression):
     def succ(self):
         return Succ(self)
 
-    def if_else(self, expr_if_true, expr_if_false):
+    def if_else(self, if_true_expr, if_false_expr):
         # TODO: Blow Up if type is not correct
         # Precondition: self is a variable, it could be anything.
         # So if someone does if var then .... We need to construct the expression tree
-        return IfThenElse(self, expr_if_true, expr_if_false)
+        return IfThenElse(self, if_true_expr, if_false_expr)
 
 class Zero(Expression):
     def __init__(self):
@@ -99,17 +100,17 @@ class Zero(Expression):
         return BoolExp(True)
 
 class Succ(Expression):
-    def __init__(self, subexp):
+    def __init__(self, sub_expr):
         super(Succ,self).__init__()
-        self._free_vars = subexp.free_vars()
-        self._subexp = subexp
+        self._free_vars = sub_expr.free_vars()
+        self._sub_expr = sub_expr
         self._type = NatType()
 
     def __str__(self):
-        return "succ(" + str(self._subexp) + ")"
+        return "succ(" + str(self._sub_expr) + ")"
 
-    def substitute(self, var_name, exp):
-        return Succ(self._subexp.substitute(var_name,exp))
+    def substitute(self, var_name, expr):
+        return Succ(self._sub_expr.substitute(var_name,expr))
 
     def succ(self):
         # Precondition: self represents "succ(E)", reduced.
@@ -121,7 +122,7 @@ class Succ(Expression):
         # Precondition: self represents "succ(E)", reduced.
         # then doing pred(succ(E)) => E
         # Poscondition: I return the subexpression tree, therefore reduced
-        return self._subexp
+        return self._sub_expr
 
     def is_zero(self):
         # Precondition: self represents "succ(E)", reduced.
@@ -129,23 +130,23 @@ class Succ(Expression):
         return BoolExp(False)
 
 class Pred(Expression):
-    def __init__(self, subexp):
+    def __init__(self, sub_expr):
         super(Pred, self).__init__()
-        self._free_vars = subexp.free_vars()
-        self._subexp = subexp
+        self._free_vars = sub_expr.free_vars()
+        self._sub_expr = sub_expr
         self._type = NatType()
 
     def __str__(self):
-        return "pred(" + str(self._subexp) + ")"
+        return "pred(" + str(self._sub_expr) + ")"
 
     def substitute(self, var_name, exp):
-        return Pred(self._subexp.substitute(var_name,exp))
+        return Pred(self._sub_expr.substitute(var_name,exp))
 
     def succ(self):
         # Precondition: self represents "pred(E)", reduced.
         # Then doing succ(pred(E)) => E
         # Postcondition: I return the subexpression tree, therefore reduced.
-        return self._subexp
+        return self._sub_expr
 
     def pred(self):
         # Precondition: self represents "pred(E)", reduced.
@@ -160,35 +161,35 @@ class Pred(Expression):
         return IsZero(self)
 
 class IsZero(Expression):
-    def __init__(self, subexp):
+    def __init__(self, sub_expr):
         super(IsZero,self).__init__()
-        self._free_vars = subexp.free_vars()
-        self._subexp = subexp
+        self._free_vars = sub_expr.free_vars()
+        self._sub_expr = sub_expr
 
     def __str__(self):
-        return "iszero(" + str(self._subexp) + ")"
+        return "iszero(" + str(self._sub_expr) + ")"
 
     def substitute(self, var_name, exp):
-        return IsZero(self._subexp.substitute(var_name,exp))
+        return IsZero(self._sub_expr.substitute(var_name,exp))
 
 class IfThenElse(Expression):
 
-    def __init__(self, condition, expr_if_true, expr_if_false):
+    def __init__(self, condition, if_true_expr, if_false_expr):
         super(IfThenElse, self).__init__()
-        self._free_vars = condition.free_vars() | expr_if_true.free_vars() | expr_if_false.free_vars()
+        self._free_vars = condition.free_vars() | if_true_expr.free_vars() | if_false_expr.free_vars()
         self._condition = condition
-        self._expr_if_true = expr_if_true
-        self._expr_if_false = expr_if_false
+        self._if_true_expr = if_true_expr
+        self._if_false_expr = if_false_expr
 
     def __str__(self):
         return "if " + str(self._condition) + " then " + \
-                str(self._expr_if_true) + " else " + \
-                str(self._expr_if_false)
+                str(self._if_true_expr) + " else " + \
+                str(self._if_false_expr)
 
     def substitute(self, var_name, exp):
         return IfThenElse(self._condition.substitute(var_name, exp),
-                          self._expr_if_true.substitute(var_name, exp),
-                          self._expr_if_false.substitue(var_name, exp))
+                          self._if_true_expr.substitute(var_name, exp),
+                          self._if_false_expr.substitue(var_name, exp))
 
-    def if_else(self, expr_if_true, expr_if_false):
+    def if_else(self, if_true_expr, if_false_expr):
         return self
