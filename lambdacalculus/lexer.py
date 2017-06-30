@@ -1,6 +1,7 @@
 #! coding: utf-8
 import ply.lex as lex
 from expression import *
+from exp_type import *
 
 """
 Lista de tokens
@@ -31,7 +32,10 @@ tokens = (
     'PAR_CLOSE',
     'IF',
     'THEN',
-    'ELSE'
+    'ELSE',
+    'LAMBDA',
+    'COLON',
+    'DOT'
 )
 
 t_PAR_CLOSE = r'\)'
@@ -73,6 +77,19 @@ def t_ZERO(t):
 
 def t_TYPE(t):
     r'Bool|Nat'
+    t.value = BoolType() if t.value == 'Bool' else NatType()
+    return t
+
+def t_LAMBDA(t):
+    r'\\'
+    return t
+
+def t_COLON(t):
+    r':'
+    return t
+
+def t_DOT(t):
+    r'\.'
     return t
 
 def t_VAR(t):

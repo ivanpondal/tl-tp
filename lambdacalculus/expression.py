@@ -1,21 +1,20 @@
 from sets import Set
+from exp_type import *
 
 __all__ = ["Expression", "Zero", "BoolExp", "Abstraction", "Variable", "Succ"]
 
-tNat = 'Nat'
-tBool = 'Bool'
 
 class Expression(object):
 
     def __init__(self):
         self._type = "NoType"
-        self._freeVars = Set([])
+        self._free_vars = Set([])
+
+    def free_vars(self):
+        return self._free_vars
 
     def e_type(self):
         return self._e_type
-
-    def __str__(self):
-        return str(self._value)
 
     def str_with_type(self):
         return str(self) + ":" + str(self._type)
@@ -23,9 +22,9 @@ class Expression(object):
 class BoolExp(Expression):
 
     def __init__(self, value):
-        super(BoolExp,self).__init__()
+        super(BoolExp, self).__init__()
         self._value = value
-        self._type = tBool
+        self._type = BoolType()
 
     def if_else(self, expr_if_true, expr_if_false):
         return expr_if_true if self._value else expr_if_false
@@ -36,20 +35,34 @@ class BoolExp(Expression):
 
 class Abstraction(Expression):
 
-    def __init__(self, value):
-        super(Abstraction,self).__init__()
+    def __init__(self, var, arg_type, expr_body):
+        super(Abstraction, self).__init__()
+        self._free_vars = expr_body.free_vars() - Set([str(var)])
+        self._var = var
+        self._arg_type = arg_type
+        self._expr_body = expr_body
+
+    def apply(self, expr_arg):
+        return self._expr_body.substitute(str(self._var), expr_arg)
+
+    def __str__(self):
+        return '\\' + str(self._var) + '.' + str(self._arg_type) + ':' + str(self._expr_body)
 
 class Variable(Expression):
 
     def __init__(self, name):
-        super(Variable,self).__init__()
+        super(Variable, self).__init__()
+        self._free_vars.add(name)
         self._name = name
 
     def __str__(self):
         return self._name
 
-    def substitute(self, varName, exp):
-        return exp if varName == self._name else self
+    def substitute(self, var_name, expr):
+        return expr if var_name == self._name else self
+
+    def succ(self):
+        return Succ(self)
 
     def if_else(self, expr_if_true, expr_if_false):
         # TODO: Blow Up if type is not correct
@@ -59,11 +72,14 @@ class Variable(Expression):
 
 class Zero(Expression):
     def __init__(self):
-        super(Zero,self).__init__()
-        self._type = tNat
+        super(Zero, self).__init__()
+        self._type = NatType()
 
     def __str__(self):
         return "0"
+
+    def substitute(self, var_name, expr):
+        return self
 
     def succ(self):
         # Precondition: self represents "0".
@@ -85,14 +101,15 @@ class Zero(Expression):
 class Succ(Expression):
     def __init__(self, subexp):
         super(Succ,self).__init__()
+        self._free_vars = subexp.free_vars()
         self._subexp = subexp
-        self._type = tNat
+        self._type = NatType()
 
     def __str__(self):
         return "succ(" + str(self._subexp) + ")"
 
-    def substitute(self, varName, exp):
-        return Succ(self._subexp.substitute(varName,exp))
+    def substitute(self, var_name, exp):
+        return Succ(self._subexp.substitute(var_name,exp))
 
     def succ(self):
         # Precondition: self represents "succ(E)", reduced.
@@ -109,19 +126,20 @@ class Succ(Expression):
     def is_zero(self):
         # Precondition: self represents "succ(E)", reduced.
         # so if someone asks if I'm zero, I depend on the free vars.
-        return BoolExp(False) if len(self._freeVars) == 0 else IsZero(self)
+        return BoolExp(False)
 
 class Pred(Expression):
     def __init__(self, subexp):
-        super(Pred,self).__init__()
+        super(Pred, self).__init__()
+        self._free_vars = subexp.free_vars()
         self._subexp = subexp
-        self._type = tNat
+        self._type = NatType()
 
     def __str__(self):
         return "pred(" + str(self._subexp) + ")"
 
-    def substitute(self, varName, exp):
-        return Pred(self._subexp.substitute(varName,exp))
+    def substitute(self, var_name, exp):
+        return Pred(self._subexp.substitute(var_name,exp))
 
     def succ(self):
         # Precondition: self represents "pred(E)", reduced.
@@ -144,18 +162,20 @@ class Pred(Expression):
 class IsZero(Expression):
     def __init__(self, subexp):
         super(IsZero,self).__init__()
+        self._free_vars = subexp.free_vars()
         self._subexp = subexp
 
     def __str__(self):
         return "iszero(" + str(self._subexp) + ")"
 
-    def substitute(self, varName, exp):
-        return IsZero(self._subexp.substitute(varName,exp))
+    def substitute(self, var_name, exp):
+        return IsZero(self._subexp.substitute(var_name,exp))
 
 class IfThenElse(Expression):
 
     def __init__(self, condition, expr_if_true, expr_if_false):
-        super(IfThenElse,self).__init__()
+        super(IfThenElse, self).__init__()
+        self._free_vars = condition.free_vars() | expr_if_true.free_vars() | expr_if_false.free_vars()
         self._condition = condition
         self._expr_if_true = expr_if_true
         self._expr_if_false = expr_if_false
@@ -165,10 +185,10 @@ class IfThenElse(Expression):
                 str(self._expr_if_true) + " else " + \
                 str(self._expr_if_false)
 
-    def substitute(self, varName, exp):
-        return IfThenElse(self._condition.substitute(varName, exp),
-                          self._expr_if_true.substitute(varName, exp),
-                          self._expr_if_false.substitue(varName, exp))
+    def substitute(self, var_name, exp):
+        return IfThenElse(self._condition.substitute(var_name, exp),
+                          self._expr_if_true.substitute(var_name, exp),
+                          self._expr_if_false.substitue(var_name, exp))
 
     def if_else(self, expr_if_true, expr_if_false):
         return self

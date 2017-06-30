@@ -43,8 +43,8 @@ class TestsLambdaCalculus(TestCase):
     def test_is_one_zero(self):
         self.assertEquals('false:Bool',str_parse('iszero(succ(0))'))
 
-    def test_is_prec_one_zero(self):
-        self.assertEquals('false:Bool',str_parse('iszero(prec(succ(0)))'))
+    def test_is_pred_one_zero(self):
+        self.assertEquals('true:Bool',str_parse('iszero(pred(succ(0)))'))
 
     def test_is_zero_succ_var(self):
         self.assertEquals('false:Bool', str_parse('iszero(succ(x))'))
