@@ -4,13 +4,25 @@ import ply.yacc as yacc
 from .lexer import tokens
 from expression import *
 
-def p_expression_expression_prime(p):
-    'expression : expression_prime'
-    p[0] = p[1]
+def p_expression_ifthenelse(p):
+    'expression : IF expression THEN expression ELSE expression'
+    p[0] = p[2].if_else(p[4], p[6])
+
+def p_expression_abstraction(p):
+    'expression : LAMBDA VAR COLON type DOT expression'
+    p[0] = Abstraction(p[2], p[4], p[6])
 
 def p_expression_application(p):
-    'expression : expression expression_prime'
+    'expression : application'
+    p[0] = p[1]
+
+def p_application_list(p):
+    'application : application expression_prime'
     p[0] = p[1].apply(p[2])
+
+def p_application_expression_prime(p):
+    'application : expression_prime'
+    p[0] = p[1]
 
 def p_expression_prime_parenthesis(p):
     'expression_prime : PAR_OPEN expression PAR_CLOSE'
@@ -27,14 +39,6 @@ def p_expression_prime_pred(p):
 def p_expression_prime_iszero(p):
     'expression_prime : ISZERO_OPEN expression PAR_CLOSE'
     p[0] = p[2].is_zero()
-
-def p_expression_prime_ifthenelse(p):
-    'expression_prime : IF expression THEN expression ELSE expression'
-    p[0] = p[2].if_else(p[4], p[6])
-
-def p_expression_prime_abstraction(p):
-    'expression_prime : LAMBDA VAR COLON type DOT expression'
-    p[0] = Abstraction(p[2], p[4], p[6])
 
 def p_expression_prime_zero(p):
     'expression_prime : ZERO'

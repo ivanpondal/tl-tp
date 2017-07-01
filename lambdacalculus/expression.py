@@ -12,8 +12,8 @@ class Expression(object):
     def free_vars(self):
         return self._free_vars
 
-    def e_type(self):
-        return self._e_type
+    def type(self):
+        return self._type
 
     def str_with_type(self):
         return str(self) + ":" + str(self._type)
