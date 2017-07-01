@@ -97,7 +97,42 @@ class TestsLambdaCalculus(TestCase):
         self.assertEquals('true:Bool',str_parse('true'))
 
     def test_example_error_if_type(self):
-        self.assertEquals('ERROR: Both if options should have the same type',str_parse('if true then 0 else false'))
+        self.assertEquals('ERROR: Both if options should have the same type',\
+            str_parse('if true then 0 else false'))
 
     def test_example_abstraction_if(self):
-        self.assertEquals('\\x:Bool.if x then false else true:Bool->Bool',str_parse('\\x:Bool.if x then false else true'))
+        self.assertEquals('\\x:Bool.if x then false else true:Bool->Bool',\
+            str_parse('\\x:Bool.if x then false else true'))
+
+    def test_example_abstraction_succ(self):
+        self.assertEquals('\\x:Nat.succ(0):Nat->Nat',str_parse('\\x:Nat.succ(0)'))
+
+    def test_example_(self):   
+        self.assertEquals('\\z:Nat.z:Nat->Nat',str_parse('\\z:Nat.z'))
+
+    def test_example_(self):   
+        self.assertEquals('ERROR: succ expects type Nat',str_parse('\\x:Bool.succ(x)) true'))
+
+    def test_example_(self):   
+        self.assertEquals('succ(succ(succ(0))):Nat',str_parse('succ(succ(succ(0)))'))
+
+    def test_example_(self):   
+        self.assertEquals('ERROR: Non closed term. "x" is free',str_parse('x'))
+
+    def test_example_(self):   
+        self.assertEquals('succ(succ(0)):Nat',str_parse('succ(succ(pred(0)))'))
+
+    def test_example_(self):   
+        self.assertEquals('\\x:Nat.succ(x):Nat->Nat',str_parse('\\x:Nat.succ(x)'))
+
+    def test_example_(self):   
+        self.assertEquals('ERROR: Left par of application (0) is not a function of domain Nat',\
+            str_parse('0 0'))
+
+    def test_example_(self):   
+        self.assertEquals('\\x:Nat->Nat.\\y:Nat.(\\z:Bool.if z then x y else 0):(Nat->Nat)->(Nat->(Bool->Nat))',\
+            str_parse('\\x:Nat->Nat.\\y:Nat.(\\z:Bool.if z then x y else 0)'))
+
+    def test_example_(self):   
+        self.assertEquals('succ(succ(succ(succ(succ(succ(succ(succ(succ(0))))))))):Nat',\
+            str_parse('(\\x:Nat->Nat.\\y:Nat.(\\z:Bool.if z then x y else 0)) (\\j:Nat.succ(j)) succ(succ(succ(succ(succ(succ(succ(succ(0)))))))) true'))
