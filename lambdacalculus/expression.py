@@ -1,4 +1,3 @@
-from sets import Set
 from exp_type import *
 
 __all__ = ["Expression", "Zero", "BoolExp", "Abstraction", "Variable", "Succ"]
@@ -7,7 +6,7 @@ __all__ = ["Expression", "Zero", "BoolExp", "Abstraction", "Variable", "Succ"]
 class Expression(object):
     def __init__(self):
         self._type = "NoType"
-        self._free_vars = Set([])
+        self._free_vars = set()
 
     def free_vars(self):
         return self._free_vars
@@ -35,10 +34,11 @@ class BoolExp(Expression):
 class Abstraction(Expression):
     def __init__(self, var, arg_type, body_expr):
         super(Abstraction, self).__init__()
-        self._free_vars = body_expr.free_vars() - Set([str(var)])
+        self._free_vars = body_expr.free_vars() - {str(var)}
         self._var = var
         self._arg_type = arg_type
         self._body_expr = body_expr
+        self._type = AbstractionType(str(var), arg_type, body_expr.type())
 
     def apply(self, expr_arg):
         return self._body_expr.substitute(str(self._var), expr_arg)
@@ -56,6 +56,7 @@ class Variable(Expression):
         super(Variable, self).__init__()
         self._free_vars.add(name)
         self._name = name
+        self._type = TypeVar(name)
 
     def __str__(self):
         return self._name
@@ -107,7 +108,7 @@ class Succ(Expression):
         super(Succ, self).__init__()
         self._free_vars = sub_expr.free_vars()
         self._sub_expr = sub_expr
-        self._type = NatType()
+        self._type = NatType()  # TODO: Blow it up if types are invalid
 
     def __str__(self):
         return "succ(" + str(self._sub_expr) + ")"
@@ -138,7 +139,7 @@ class Pred(Expression):
         super(Pred, self).__init__()
         self._free_vars = sub_expr.free_vars()
         self._sub_expr = sub_expr
-        self._type = NatType()
+        self._type = NatType()  # TODO: Blow it up if types are invalid
 
     def __str__(self):
         return "pred(" + str(self._sub_expr) + ")"
@@ -170,6 +171,7 @@ class IsZero(Expression):
         super(IsZero, self).__init__()
         self._free_vars = sub_expr.free_vars()
         self._sub_expr = sub_expr
+        self._type = BoolType()  # TODO: Blow it up if types are invalid
 
     def __str__(self):
         return "iszero(" + str(self._sub_expr) + ")"
