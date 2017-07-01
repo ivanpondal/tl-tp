@@ -88,3 +88,16 @@ class TestsLambdaCalculus(TestCase):
 
     def test_application_repeated_variable_total_application(self):
         self.assertEquals('succ(succ(0)):Nat', str_parse('((\\x:Nat.\\x:Nat.succ(x)) succ(0)) 0'))
+
+    # Examples provided in the task assignment
+    def test_example_0(self):
+        self.assertEquals('0:Nat',str_parse('0'))
+
+    def test_example_true(self):
+        self.assertEquals('true:Bool',str_parse('true'))
+
+    def test_example_error_if_type(self):
+        self.assertEquals('ERROR: Both if options should have the same type',str_parse('if true then 0 else false'))
+
+    def test_example_abstraction_if(self):
+        self.assertEquals('\\x:Bool.if x then false else true:Bool->Bool',str_parse('\\x:Bool.if x then false else true'))
