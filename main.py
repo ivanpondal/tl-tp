@@ -1,4 +1,5 @@
 from lambdacalculus import parser
+import readline
 
 while True:
     try:
