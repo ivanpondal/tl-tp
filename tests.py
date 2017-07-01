@@ -89,6 +89,12 @@ class TestsLambdaCalculus(TestCase):
     def test_application_repeated_variable_total_application(self):
         self.assertEquals('succ(0):Nat', str_parse('((\\x:Nat.\\x:Nat.succ(x)) succ(0)) 0'))
 
+    def test_application_sucesive(self):
+        self.assertEquals('0:Nat', str_parse('(\\x:Nat.\\y:Nat.pred(y)) succ(0) 0'))
+
+    def test_application_with_variables(self):
+        self.assertEquals('0:Nat', str_parse('(\\x:Nat->Nat.\\y:Nat.x y) (\\z:Nat.succ(z)) 0'))
+
     # Examples provided in the task assignment
     def test_example_0(self):
         self.assertEquals('0:Nat',str_parse('0'))
