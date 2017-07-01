@@ -84,10 +84,10 @@ class TestsLambdaCalculus(TestCase):
         self.assertEquals('false:Bool',str_parse('(\\x:Bool.x) false'))
 
     def test_application_repeated_variable_partial_application(self):
-        self.assertEquals('\\x:Nat.succ(0):Nat->Nat',str_parse('(\\x:Nat.\\x:Nat.succ(x)) 0'))
+        self.assertEquals('\\x:Nat.succ(x):Nat->Nat',str_parse('(\\x:Nat.\\x:Nat.succ(x)) 0'))
 
     def test_application_repeated_variable_total_application(self):
-        self.assertEquals('succ(succ(0)):Nat', str_parse('((\\x:Nat.\\x:Nat.succ(x)) succ(0)) 0'))
+        self.assertEquals('succ(0):Nat', str_parse('((\\x:Nat.\\x:Nat.succ(x)) succ(0)) 0'))
 
     # Examples provided in the task assignment
     def test_example_0(self):
