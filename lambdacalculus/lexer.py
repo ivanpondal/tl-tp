@@ -36,12 +36,14 @@ tokens = (
     'LAMBDA',
     'COLON',
     'DOT',
-    'PAR_OPEN'
+    'PAR_OPEN',
+    'ARROW'
 )
 
 t_PAR_CLOSE = r'\)'
 t_PAR_OPEN = r'\('
 t_ignore = ' \t'
+t_ARROW = '->'
 
 def t_SUCC_OPEN(t):
     r'succ\('

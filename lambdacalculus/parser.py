@@ -52,13 +52,21 @@ def p_expression_prime_var(p):
     'expression_prime : VAR'
     p[0] = p[1]
 
+def p_type_arrow(p):
+    'type : type_prime ARROW type'
+    p[0] = AbstractionType("IdontKnowTheName",p[1],p[3])
+
 def p_type(p):
     'type : type_prime'
     p[0] = p[1]
 
-def p_type_prime(p):
+def p_type_prime_basic(p):
     'type_prime : TYPE'
     p[0] = p[1]
+
+def p_type_prime_parenthesis(p):
+    'type_prime : PAR_OPEN type PAR_CLOSE'
+    p[0] = p[2]
 
 def p_error(p):
     print("================\nHubo un error en el parseo:\n" + str(p) + "\n================\n")
