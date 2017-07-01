@@ -1,7 +1,25 @@
-__all__ = ["BoolType", "NatType", "AbstractionType", "TypeVar"]
+__all__ = ["BoolType",
+           "NatType",
+           "AbstractionType",
+           "TypeVar",
+           "LambdaUnificationError"]
+
+
+class LambdaUnificationError(Exception):
+    pass
+
 
 class ExpType(object):
-    pass
+
+    def unify_with_bool(self):
+        raise LambdaUnificationError("ERROR: Los tipos " + str(self) + " y Bool no unifican")
+
+    def unify_with_nat(self):
+        raise LambdaUnificationError("ERROR: Los tipos " + str(self) + " y Nat no unifican")
+
+    def unify_with_abstraction(self, other_abs):
+        raise LambdaUnificationError("ERROR: Los tipos " + str(self) + " y " + str(other_abs) + " no unifican")
+
 
 class BoolType(ExpType):
 
@@ -14,6 +32,13 @@ class BoolType(ExpType):
     def substitute(self, name, type):
         return self
 
+    def unify_with(self, other_type):
+        return other_type.unify_with_bool()
+
+    def unify_with_bool(self):
+        return self
+
+
 class NatType(ExpType):
 
     def __str__(self):
@@ -24,6 +49,13 @@ class NatType(ExpType):
 
     def substitute(self, name, type):
         return self
+
+    def unify_with(self, other_type):
+        return other_type.unify_with_nat()
+
+    def unify_with_nat(self):
+        return self
+
 
 class AbstractionType(ExpType):
 
@@ -38,10 +70,25 @@ class AbstractionType(ExpType):
     def str_assoc(self):
         return '(' + str(self) + ')'
 
+    def arg_type(self):
+        return self._arg_type
+
+    def body_type(self):
+        return self._body_type
+
     def substitute(self, name, type):
         return self if name == self._arg_name else \
             AbstractionType(self._arg_name, self._arg_type,
                             self._body_type.substitute(name, type))
+
+    def unify_with(self, other_type):
+        return other_type.unify_with_abstraction(self)
+
+    def unify_with_abstraction(self, other_abs):
+        return AbstractionType(self._arg_name,
+                               self._arg_type.unify_with(other_abs.arg_type()),
+                               self._body_type.unify_with(other_abs.body_type()))
+
 
 class TypeVar(ExpType):
 
@@ -56,3 +103,18 @@ class TypeVar(ExpType):
 
     def substitute(self, name, type):
         return type if self._name == name else self
+
+    def unify_with(self, other_type):
+        return other_type
+
+    def unify_with_bool(self):
+        return BoolType()
+
+    def unify_with_nat(self):
+        return NatType()
+
+    def unify_with_abstraction(self, other_abs):
+        return other_abs
+
+
+

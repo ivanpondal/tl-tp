@@ -1,3 +1,5 @@
+#! coding: utf-8
+
 from exp_type import *
 
 __all__ = ["Expression", "Zero", "BoolExp", "Abstraction", "Variable", "Succ"]
@@ -16,6 +18,18 @@ class Expression(object):
 
     def str_with_type(self):
         return str(self) + ":" + str(self._type)
+
+    def if_else(self, if_true_expr, if_false_expr):
+        raise LambdaTypeError("ERROR: La condición del if debe ser de tipo Bool")
+
+    def succ(self):
+        raise LambdaTypeError("ERROR: succ espera un valor de tipo Nat")
+
+    def pred(self):
+        raise LambdaTypeError("ERROR: pred espera un valor de tipo Nat")
+
+    def is_zero(self):
+        raise LambdaTypeError("ERROR: iszero espera un valor de tipo Nat")
 
 
 class BoolExp(Expression):
@@ -68,7 +82,6 @@ class Variable(Expression):
         return Succ(self)
 
     def if_else(self, if_true_expr, if_false_expr):
-        # TODO: Blow Up if type is not correct
         # Precondition: self is a variable, it could be anything.
         # So if someone does if var then .... We need to construct the expression tree
         return IfThenElse(self, if_true_expr, if_false_expr)
@@ -108,7 +121,7 @@ class Succ(Expression):
         super(Succ, self).__init__()
         self._free_vars = sub_expr.free_vars()
         self._sub_expr = sub_expr
-        self._type = NatType()  # TODO: Blow it up if types are invalid
+        self._type = NatType()
 
     def __str__(self):
         return "succ(" + str(self._sub_expr) + ")"
@@ -139,7 +152,7 @@ class Pred(Expression):
         super(Pred, self).__init__()
         self._free_vars = sub_expr.free_vars()
         self._sub_expr = sub_expr
-        self._type = NatType()  # TODO: Blow it up if types are invalid
+        self._type = NatType()
 
     def __str__(self):
         return "pred(" + str(self._sub_expr) + ")"
@@ -171,7 +184,7 @@ class IsZero(Expression):
         super(IsZero, self).__init__()
         self._free_vars = sub_expr.free_vars()
         self._sub_expr = sub_expr
-        self._type = BoolType()  # TODO: Blow it up if types are invalid
+        self._type = BoolType()
 
     def __str__(self):
         return "iszero(" + str(self._sub_expr) + ")"
@@ -187,6 +200,10 @@ class IfThenElse(Expression):
         self._condition = condition
         self._if_true_expr = if_true_expr
         self._if_false_expr = if_false_expr
+        try:
+            self._type = if_true_expr.type().unify_with(if_false_expr.type())
+        except LambdaUnificationError():
+            raise LambdaTypeError("ERROR: Las dos opciones del if deben tener el mismo tipo")
 
     def __str__(self):
         return "if " + str(self._condition) + " then " + \
@@ -196,7 +213,11 @@ class IfThenElse(Expression):
     def substitute(self, var_name, exp):
         return IfThenElse(self._condition.substitute(var_name, exp),
                           self._if_true_expr.substitute(var_name, exp),
-                          self._if_false_expr.substitue(var_name, exp))
+                          self._if_false_expr.substitute(var_name, exp))
 
     def if_else(self, if_true_expr, if_false_expr):
         return self
+
+
+class LambdaTypeError(Exception):
+    pass
