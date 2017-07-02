@@ -89,7 +89,10 @@ ENV/
 # Rope project settings
 .ropeproject
 
-# Ignores de PLY
+# Pycharm project settings
+.idea
 
+# Ignores de PLY
 parsetab.py
 parser.out
+
