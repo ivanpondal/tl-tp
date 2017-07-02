@@ -91,7 +91,8 @@ class Application(Expression):
         # Check that left expression is an abstraction and its domain type is
         # the same as the right expression type
         try:
-            abstraction_unified_type = left_expr.type().unify_with(AbstractionType(right_expr.type(), TypeVar()))
+            abstraction_unified_type = left_expr.type().unify_with(
+                AbstractionType(right_expr.type(), TypeVar()))
         except LambdaUnificationError:
             raise LambdaTypeError("ERROR: Left part of application (" + str(left_expr) +
                                   ") is not a function of domain " + str(right_expr.type()))
@@ -115,7 +116,7 @@ class Variable(Expression):
         super(Variable, self).__init__()
         self._free_vars.add(name)
         self._name = name
-        self._type = TypeVar(name) if var_type == None else var_type
+        self._type = NamedTypeVar(name) if var_type == None else var_type
 
     def __str__(self):
         return self._name
