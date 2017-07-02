@@ -113,7 +113,7 @@ def t_NAT(t):
 
 def t_error(t):
     spaces = ' ' * (t.lexpos + 3) # 3 is the prompt length
-    raise LambdaLexError("{0}^\n{0}|\n{0}|\nIllegal character '{1}' at position {2}".\
+    raise LambdaLexError("{0}^\n{0}|\n{0}|\nERROR: Illegal character '{1}' at position {2}".\
         format(spaces,t.value[0],t.lexpos))
 
 # Build the lexer

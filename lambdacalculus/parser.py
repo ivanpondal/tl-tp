@@ -1,6 +1,7 @@
 #! coding: utf-8
 """Parser LR(1) de cálculo lambda."""
 import ply.yacc as yacc
+from . import LambdaError
 from .lexer import tokens
 from expression import *
 from exp_type import *
@@ -74,12 +75,20 @@ def p_type_prime_parenthesis(p):
     p[0] = p[2]
 
 def p_error(p):
-    print("================\nHubo un error en el parseo:\n" + str(p) + "\n================\n")
+    if p:
+        spaces = ' ' * (p.lexpos + 3) # 3 is the prompt length
+        raise LambdaParseError("{0}^\n{0}|\n{0}|\nERROR: Unexpected token '{1}' at position {2}".\
+            format(spaces, p.value, p.lexpos))
+    else:
+        raise LambdaParseError("ERROR: Unexpected end of expression")
 
-    parser.restart()
 
 # Build the parser
 parser = yacc.yacc(debug=True)
 
 def apply_parser(str):
     return parser.parse(str)
+
+
+class LambdaParseError(LambdaError):
+    pass
