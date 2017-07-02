@@ -68,6 +68,9 @@ class TestsLambdaCalculus(TestCase):
     def test_if_then_else_in_abstraction(self):
          self.assertEquals('\\x:Bool.if x then 0 else succ(0):Bool->Nat', str_parse('\\x:Bool.if x then 0 else succ(0)'))
 
+    def test_if_then_else_with_iszero_in_abstraction(self):
+        self.assertEquals('succ(0):Nat', str_parse('(\\x:Nat.\\y:Nat.\\z:Nat. if iszero(x) then y else z) 0 1 2'))
+
     # Abstraction Tests
 
     def test_basic_abstraction_id_bool(self):
