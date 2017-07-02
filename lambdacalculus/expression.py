@@ -249,9 +249,9 @@ class Pred(Expression):
         return IsZero(self)
 
 
-class IsZero(BoolExp):
+class IsZero(Expression):
     def __init__(self, sub_expr):
-        super(IsZero, self).__init__(sub_expr)
+        super(IsZero, self).__init__()
         self._free_vars = sub_expr.free_vars()
         self._sub_expr = sub_expr
         self._type = BoolType()
@@ -261,6 +261,9 @@ class IsZero(BoolExp):
 
     def substitute(self, var_name, exp):
         return self._sub_expr.substitute(var_name, exp).is_zero()
+
+    def if_else(self, if_true_expr, if_false_expr):
+        return IfThenElse(self, if_true_expr, if_false_expr)
 
 
 class IfThenElse(Expression):
