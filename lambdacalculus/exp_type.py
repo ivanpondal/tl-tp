@@ -1,3 +1,5 @@
+from . import LambdaError
+
 __all__ = ["BoolType",
            "NatType",
            "AbstractionType",
@@ -5,20 +7,20 @@ __all__ = ["BoolType",
            "LambdaUnificationError"]
 
 
-class LambdaUnificationError(Exception):
+class LambdaUnificationError(LambdaError):
     pass
 
 
 class ExpType(object):
 
     def unify_with_bool(self):
-        raise LambdaUnificationError("ERROR: Los tipos " + str(self) + " y Bool no unifican")
+        raise LambdaUnificationError("ERROR: Types " + str(self) + " and Bool do not unify")
 
     def unify_with_nat(self):
-        raise LambdaUnificationError("ERROR: Los tipos " + str(self) + " y Nat no unifican")
+        raise LambdaUnificationError("ERROR: Types " + str(self) + " and Nat do not unify")
 
     def unify_with_abstraction(self, other_abs):
-        raise LambdaUnificationError("ERROR: Los tipos " + str(self) + " y " + str(other_abs) + " no unifican")
+        raise LambdaUnificationError("ERROR: Types " + str(self) + " and " + str(other_abs) + " do not unify")
 
 
 class BoolType(ExpType):
@@ -65,7 +67,7 @@ class AbstractionType(ExpType):
         self._body_type = body_type.substitute(arg_name, arg_type)
 
     def __str__(self):
-        return str(self._arg_type) + '->' + self._body_type.str_assoc()
+        return self._arg_type.str_assoc() + '->' + str(self._body_type)
 
     def str_assoc(self):
         return '(' + str(self) + ')'

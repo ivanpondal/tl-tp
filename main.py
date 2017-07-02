@@ -1,6 +1,6 @@
 #! coding: utf-8
 
-from lambdacalculus import parser
+from lambdacalculus import parser, LambdaError
 import readline
 
 while True:
@@ -8,5 +8,8 @@ while True:
         exp_str = raw_input('λ> ')
     except EOFError:
         break
-    value = parser.apply_parser(exp_str)
-    print(value.str_with_type())
+    try:
+        value = parser.apply_parser(exp_str)
+        print(value.str_with_type())
+    except LambdaError as e:
+        print e

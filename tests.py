@@ -1,9 +1,13 @@
 from unittest import *
 import unittest
-from lambdacalculus import parse
+from lambdacalculus import parse, LambdaError
+
 
 def str_parse(input):
-    return parse(input).str_with_type()
+    try:
+        return parse(input).str_with_type()
+    except LambdaError as e:
+        return str(e)
 ## HOW TO RUN:
 #  python -m unittest tests.TestsLambdaCalculus
 
@@ -70,7 +74,7 @@ class TestsLambdaCalculus(TestCase):
         self.assertEquals('\\x:Nat.x:Nat->Nat',str_parse('\\x:Nat.x'))
 
     def test_basic_abstraction_id_arrow(self):
-        self.assertEquals('\\x:Nat->Bool.x:(Nat->Bool)->(Nat->Bool)',str_parse('\\x:Nat->Bool.x'))
+        self.assertEquals('\\x:Nat->Bool.x:(Nat->Bool)->Nat->Bool',str_parse('\\x:Nat->Bool.x'))
 
     def test_basic_abstraction_in_abstraction(self):
         self.assertEquals('\\x:Nat.\\y:Bool.x:Nat->Bool->Nat',str_parse('\\x:Nat.\\y:Bool.x'))

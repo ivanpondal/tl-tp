@@ -1,5 +1,6 @@
 #! coding: utf-8
 
+from . import LambdaError
 from exp_type import *
 
 __all__ = ["Expression", "Zero", "BoolExp", "Abstraction", "Variable", "Succ"]
@@ -20,16 +21,16 @@ class Expression(object):
         return str(self) + ":" + str(self._type)
 
     def if_else(self, if_true_expr, if_false_expr):
-        raise LambdaTypeError("ERROR: La condición del if debe ser de tipo Bool")
+        raise LambdaTypeError("ERROR: if condition should be of type Bool")
 
     def succ(self):
-        raise LambdaTypeError("ERROR: succ espera un valor de tipo Nat")
+        raise LambdaTypeError("ERROR: succ expects a value of type Nat")
 
     def pred(self):
-        raise LambdaTypeError("ERROR: pred espera un valor de tipo Nat")
+        raise LambdaTypeError("ERROR: pred expects a value of type Nat")
 
     def is_zero(self):
-        raise LambdaTypeError("ERROR: iszero espera un valor de tipo Nat")
+        raise LambdaTypeError("ERROR: iszero expects a value of type Nat")
 
 
 class BoolExp(Expression):
@@ -39,7 +40,14 @@ class BoolExp(Expression):
         self._type = BoolType()
 
     def if_else(self, if_true_expr, if_false_expr):
-        return if_true_expr if self._value else if_false_expr
+        try:
+            if_true_expr.type().unify_with(if_false_expr.type())
+            return if_true_expr if self._value else if_false_expr
+        except LambdaUnificationError:
+            raise LambdaTypeError("ERROR: Both if options should have the same type")
+
+    def substitute(self, var_name, expr):
+        return self
 
     def __str__(self):
         return str(self._value).lower()
@@ -49,28 +57,32 @@ class Abstraction(Expression):
     def __init__(self, var, arg_type, body_expr):
         super(Abstraction, self).__init__()
         self._free_vars = body_expr.free_vars() - {str(var)}
-        self._var = var
-        self._arg_type = arg_type
-        self._body_expr = body_expr
+        self._var = Variable(str(var), arg_type)
+        self._body_expr = body_expr.substitute(str(var), self._var)
         self._type = AbstractionType(str(var), arg_type, body_expr.type())
 
+
     def apply(self, expr_arg):
-        return self._body_expr.substitute(str(self._var), expr_arg)
+        try:
+            expr_arg.type().unify_with(self._var.type())
+            return self._body_expr.substitute(str(self._var), expr_arg)
+        except LambdaUnificationError:
+            raise LambdaTypeError("Abstraction expects an argument of type " + str(self._var.type()))
 
     def __str__(self):
-        return '\\' + str(self._var) + '.' + str(self._arg_type) + ':' + str(self._body_expr)
+        return '\\' + str(self._var) + ':' + str(self._var.type()) + '.' + str(self._body_expr)
 
     def substitute(self, var_name, expr):
         return self if var_name != str(self._var) else \
-            Abstraction(self._var, self._arg_type, self._body_expr.substitute(var_name, expr))
+            Abstraction(self._var, self._var.type(), self._body_expr.substitute(var_name, expr))
 
 
 class Variable(Expression):
-    def __init__(self, name):
+    def __init__(self, name, var_type=None):
         super(Variable, self).__init__()
         self._free_vars.add(name)
         self._name = name
-        self._type = TypeVar(name)
+        self._type = TypeVar(name) if var_type == None else var_type
 
     def __str__(self):
         return self._name
@@ -79,12 +91,34 @@ class Variable(Expression):
         return expr if var_name == self._name else self
 
     def succ(self):
-        return Succ(self)
+        try:
+            self._type.unify_with(NatType())
+            return Succ(self)
+        except LambdaUnificationError:
+            raise LambdaTypeError("ERROR: succ expects a value of type Nat")
+
+    def pred(self):
+        try:
+            self._type.unify_with(NatType())
+            return Pred(self)
+        except LambdaUnificationError:
+            raise LambdaTypeError("ERROR: pred expects a value of type Nat")
+
+    def is_zero(self):
+        try:
+            self._type.unify_with(NatType())
+            return IsZero(self)
+        except LambdaUnificationError:
+            raise LambdaTypeError("ERROR: iszero expects a value of type Nat")
 
     def if_else(self, if_true_expr, if_false_expr):
         # Precondition: self is a variable, it could be anything.
         # So if someone does if var then .... We need to construct the expression tree
-        return IfThenElse(self, if_true_expr, if_false_expr)
+        try:
+            self._type.unify_with(BoolType())
+            return IfThenElse(self, if_true_expr, if_false_expr)
+        except LambdaUnificationError:
+            raise LambdaTypeError("ERROR: if condition should be of type Bool")
 
 
 class Zero(Expression):
@@ -127,7 +161,7 @@ class Succ(Expression):
         return "succ(" + str(self._sub_expr) + ")"
 
     def substitute(self, var_name, expr):
-        return Succ(self._sub_expr.substitute(var_name, expr))
+        return self._sub_expr.substitute(var_name, expr).succ()
 
     def succ(self):
         # Precondition: self represents "succ(E)", reduced.
@@ -158,7 +192,7 @@ class Pred(Expression):
         return "pred(" + str(self._sub_expr) + ")"
 
     def substitute(self, var_name, exp):
-        return Pred(self._sub_expr.substitute(var_name, exp))
+        return self._sub_expr.substitute(var_name, exp).pred()
 
     def succ(self):
         # Precondition: self represents "pred(E)", reduced.
@@ -190,7 +224,7 @@ class IsZero(Expression):
         return "iszero(" + str(self._sub_expr) + ")"
 
     def substitute(self, var_name, exp):
-        return IsZero(self._sub_expr.substitute(var_name, exp))
+        return self._sub_expr.substitute(var_name, exp).is_zero()
 
 
 class IfThenElse(Expression):
@@ -203,7 +237,7 @@ class IfThenElse(Expression):
         try:
             self._type = if_true_expr.type().unify_with(if_false_expr.type())
         except LambdaUnificationError():
-            raise LambdaTypeError("ERROR: Las dos opciones del if deben tener el mismo tipo")
+            raise LambdaTypeError("ERROR: Both if options should have the same type")
 
     def __str__(self):
         return "if " + str(self._condition) + " then " + \
@@ -211,13 +245,13 @@ class IfThenElse(Expression):
                str(self._if_false_expr)
 
     def substitute(self, var_name, exp):
-        return IfThenElse(self._condition.substitute(var_name, exp),
-                          self._if_true_expr.substitute(var_name, exp),
-                          self._if_false_expr.substitute(var_name, exp))
+        return self._condition.substitute(var_name, exp).if_else(
+            self._if_true_expr.substitute(var_name, exp),
+            self._if_false_expr.substitute(var_name, exp))
 
     def if_else(self, if_true_expr, if_false_expr):
         return self
 
 
-class LambdaTypeError(Exception):
+class LambdaTypeError(LambdaError):
     pass
