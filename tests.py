@@ -121,7 +121,7 @@ class TestsLambdaCalculus(TestCase):
         self.assertEquals('\\z:Nat.z:Nat->Nat',str_parse('\\z:Nat.z'))
 
     def test_example_abstraction_type_application(self):   
-        self.assertEquals('ERROR: succ expects type Nat',str_parse('\\x:Bool.succ(x)) true'))
+        self.assertEquals('ERROR: succ expects a value of type Nat',str_parse('\\x:Bool.succ(x)) true'))
 
     def test_example_typing_nat(self):   
         self.assertEquals('succ(succ(succ(0))):Nat',str_parse('succ(succ(succ(0)))'))
