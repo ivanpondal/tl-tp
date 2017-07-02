@@ -99,7 +99,13 @@ class TestsLambdaCalculus(TestCase):
     def test_application_with_variables(self):
         self.assertEquals('0:Nat', str_parse('(\\x:Nat->Nat.\\y:Nat.x y) (\\z:Nat.succ(z)) 0'))
 
+    # Free Term tests
+
+    def test_evaluates_until_non_closed_term(self):
+        self.assertEquals('ERROR: Non closed term. "\\x:Nat.y x" is free',str_parse('(\\z:Nat.pred(succ(z))) \\x:Nat.y x'))
+
     # Examples provided in the task assignment
+
     def test_example_0(self):
         self.assertEquals('0:Nat',str_parse('0'))
 

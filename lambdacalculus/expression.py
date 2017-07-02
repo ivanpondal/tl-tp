@@ -18,6 +18,8 @@ class Expression(object):
         return self._type
 
     def str_with_type(self):
+        if self._free_vars:
+            raise LambdaFreeTermError('ERROR: Non closed term. "' + str(self) + '" is free')
         return str(self) + ":" + str(self._type)
 
     def if_else(self, if_true_expr, if_false_expr):
@@ -259,4 +261,7 @@ class IfThenElse(Expression):
 
 
 class LambdaTypeError(LambdaError):
+    pass
+
+class LambdaFreeTermError(LambdaError):
     pass
