@@ -135,12 +135,6 @@ class Zero(Expression):
     def substitute(self, var_name, expr):
         return self
 
-    def succ(self):
-        # Precondition: self represents "0".
-        # So succ operation should make the tree grow.
-        # Poscondition: I return the new expression tree, also reduced.
-        return Succ(self)
-
     def pred(self):
         # Precondition: self represents "0".
         # So pred operation should make no change.
@@ -171,12 +165,6 @@ class Succ(Expression):
 
     def substitute(self, var_name, expr):
         return self._sub_expr.substitute(var_name, expr).succ()
-
-    def succ(self):
-        # Precondition: self represents "succ(E)", reduced.
-        # So succ operation should make the tree grow.
-        # Poscondition: I return the new expression tree, also reduced.
-        return Succ(self)
 
     def pred(self):
         # Precondition: self represents "succ(E)", reduced.
@@ -214,19 +202,6 @@ class Pred(Expression):
         # Then doing succ(pred(E)) => E
         # Postcondition: I return the subexpression tree, therefore reduced.
         return self._sub_expr
-
-    # def pred(self):
-    #     # Precondition: self represents "pred(E)", reduced.
-    #     # So pred operation should make the tree grow.
-    #     # Poscondition: I return the new expression tree, also reduced.
-    #     return Pred(self)
-    #
-    # def is_zero(self):
-    #     # Precondition: self represents "pred(E)", reduced.
-    #     # so if someone asks if I'm zero, I need to evaluate completely.
-    #     # My only choice is to grow the expression tree:
-    #     return IsZero(self)
-
 
 class IsZero(Expression):
     def __init__(self, sub_expr):
