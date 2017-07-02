@@ -32,6 +32,9 @@ class TestsLambdaCalculus(TestCase):
     def test_multiple_succ_pred(self):
         self.assertEquals('0:Nat',str_parse('pred(pred(succ(succ(0))))'))
 
+    def test_numeral_as_multiple_succ(self):
+        self.assertEquals('succ(succ(succ(succ(0)))):Nat', str_parse('4'))
+
     # Basic Bool operations
 
     def test_true(self):
@@ -102,8 +105,8 @@ class TestsLambdaCalculus(TestCase):
     def test_application_in_applied_abstraction(self):
         self.assertEquals('\\x:Nat.x:Nat->Nat', str_parse('(\\f:Nat->Nat.\\x:Nat.f x) \\x:Nat.x'))
 
-    # def test_application_with_variables(self):
-    #     self.assertEquals('0:Nat', str_parse('(\\x:Nat->Nat.\\y:Nat.x y) (\\z:Nat.succ(z)) 0'))
+    def test_application_with_variables(self):
+        self.assertEquals('succ(0):Nat', str_parse('(\\x:Nat->Nat.\\y:Nat.x y) (\\z:Nat.succ(z)) 0'))
 
     # Free Term tests
 
@@ -158,4 +161,4 @@ class TestsLambdaCalculus(TestCase):
 
     def test_example_applying_multiple_abstraction(self):   
         self.assertEquals('succ(succ(succ(succ(succ(succ(succ(succ(succ(0))))))))):Nat',\
-            str_parse('(\\x:Nat->Nat.\\y:Nat.(\\z:Bool.if z then x y else 0)) (\\j:Nat.succ(j)) succ(succ(succ(succ(succ(succ(succ(succ(0)))))))) true'))
+            str_parse('(\\x:Nat->Nat.\\y:Nat.(\\z:Bool.if z then x y else 0)) (\\j:Nat.succ(j)) 8 true'))
