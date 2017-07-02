@@ -73,7 +73,7 @@ class Abstraction(Expression):
         return '\\' + str(self._var) + ':' + str(self._var.type()) + '.' + str(self._body_expr)
 
     def substitute(self, var_name, expr):
-        return self if var_name != str(self._var) else \
+        return self if var_name == str(self._var) else \
             Abstraction(self._var, self._var.type(), self._body_expr.substitute(var_name, expr))
 
 
