@@ -131,7 +131,7 @@ class TestsLambdaCalculus(TestCase):
         self.assertEquals('succ(0):Nat', str_parse('(\\x:Nat->Nat.\\y:Nat.x y) (\\z:Nat.succ(z)) 0'))
 
     def test_application_as_boolean_expression(self):
-        self.assertEquals('\\f:Nat->Bool\\x.Nat.if f x then 0 else 0:(Nat->Bool)->Nat->Nat', str_parse('\\f:Nat->Bool.\\x:Nat.if f x then 0 else 0'))
+        self.assertEquals('\\f:Nat->Bool.\\x:Nat.if f x then 0 else 0:(Nat->Bool)->Nat->Nat', str_parse('\\f:Nat->Bool.\\x:Nat.if f x then 0 else 0'))
 
     # Free Term tests
 
