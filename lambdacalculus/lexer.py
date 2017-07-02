@@ -2,6 +2,7 @@
 import ply.lex as lex
 from expression import *
 from exp_type import *
+from . import LambdaError
 
 """
 Lista de tokens
@@ -110,6 +111,11 @@ def t_NAT(t):
         t.value = Succ(t.value)
     return t
 
+def t_error(t):
+    spaces = ' ' * (t.lexpos + 3) # 3 is the prompt length
+    raise LambdaLexError("{0}^\n{0}|\n{0}|\nIllegal character '{1}' at position {2}".\
+        format(spaces,t.value[0],t.lexpos))
+
 # Build the lexer
 lexer = lex.lex()
 
@@ -118,3 +124,6 @@ def apply_lexer(string):
     lexer.input(string)
 
     return list(lexer)
+
+class LambdaLexError(LambdaError):
+    pass
