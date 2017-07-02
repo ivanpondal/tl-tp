@@ -77,6 +77,10 @@ class TestsLambdaCalculus(TestCase):
     def test_nested_if_then_else(self):
         self.assertEquals('false:Bool', str_parse('if if true then true else false then false else true'))
 
+    def test_nested_if_then_else_with_vars(self):
+        self.assertEquals('\\x:Bool.if if x then true else false then false else true:Bool->Bool', str_parse('\\x:Bool.if if x then true else false then false else true'))
+
+
     # Abstraction Tests
 
     def test_basic_abstraction_id_bool(self):
