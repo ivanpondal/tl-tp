@@ -8,7 +8,6 @@ __all__ = ["Expression", "Zero", "BoolExp", "Abstraction", "Variable", "Succ"]
 
 class Expression(object):
     def __init__(self):
-        self._type = "NoType"
         self._free_vars = set()
 
     def free_vars(self):
@@ -18,8 +17,10 @@ class Expression(object):
         return self._type
 
     def str_with_type(self):
-        if self._free_vars:
-            raise LambdaFreeTermError('ERROR: Non closed term. "' + str(self) + '" is free')
+        if len(self._free_vars) > 0:
+            raise LambdaNonClosedTermError("ERROR: Non-closed term ("
+                + ", ".join(self._free_vars)
+                + (" is" if len(self._free_vars) == 1 else " are") + " free)")
         return str(self) + ":" + str(self._type)
 
     def if_else(self, if_true_expr, if_false_expr):
@@ -66,7 +67,9 @@ class Abstraction(Expression):
         self._free_vars = body_expr.free_vars() - {str(var)}
         self._var = Variable(str(var), arg_type)
         self._body_expr = body_expr.substitute(str(var), self._var)
-        self._type = AbstractionType(str(var), arg_type, body_expr.type())
+        self._type = AbstractionType(var_type=arg_type,
+                                     body_type=body_expr.type(),
+                                     var_name=str(var))
 
 
     def apply(self, expr_arg):
@@ -74,7 +77,7 @@ class Abstraction(Expression):
             expr_arg.type().unify_with(self._var.type())
             return self._body_expr.substitute(str(self._var), expr_arg)
         except LambdaUnificationError:
-            raise LambdaTypeError("Abstraction expects an argument of type " + str(self._var.type()))
+            raise LambdaTypeError("ERROR: left part of application is not a function with range " + str(expr_arg.type()))
 
     def __str__(self):
         return '\\' + str(self._var) + ':' + str(self._var.type()) + '.' + str(self._body_expr)
@@ -82,6 +85,22 @@ class Abstraction(Expression):
     def substitute(self, var_name, expr):
         return self if var_name == str(self._var) else \
             Abstraction(self._var, self._var.type(), self._body_expr.substitute(var_name, expr))
+
+
+class Application(Expression):
+    def __init__(self, left_expr, right_expr):
+        super(Application, self).__init__()
+        self._free_vars = left_expr.free_vars() | right_expr.free_vars()
+        self._left_expr = left_expr
+        self._right_expr = right_expr
+        self._type = left_expr.type().body_type()
+
+    def __str__(self):
+        return str(self._left_expr) + " " + str(self._right_expr)
+
+    def substitute(self, var_name, expr):
+        return self._left_expr.substitute(var_name, expr)\
+            .apply(self._right_expr.substitute(var_name, expr))
 
 
 class Variable(Expression):
@@ -126,6 +145,13 @@ class Variable(Expression):
             return IfThenElse(self, if_true_expr, if_false_expr)
         except LambdaUnificationError:
             raise LambdaTypeError("ERROR: if condition should be of type Bool")
+
+    def apply(self, expr):
+        try:
+            self._type.unify_with(AbstractionType(expr.type(), TypeVar()))
+            return Application(self, expr)
+        except LambdaUnificationError:
+            raise LambdaTypeError("ERROR: left part of application is not a function with range " + str(expr.type()))
 
 
 class Zero(Expression):
@@ -263,5 +289,5 @@ class IfThenElse(Expression):
 class LambdaTypeError(LambdaError):
     pass
 
-class LambdaFreeTermError(LambdaError):
+class LambdaNonClosedTermError(LambdaError):
     pass

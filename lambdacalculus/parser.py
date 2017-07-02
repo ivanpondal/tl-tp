@@ -55,7 +55,7 @@ def p_expression_prime_var(p):
 
 def p_type_arrow(p):
     'type : type_prime ARROW type'
-    p[0] = AbstractionType("IdontKnowTheName",p[1],p[3])
+    p[0] = AbstractionType(p[1], p[3])
 
 def p_type(p):
     'type : type_prime'
