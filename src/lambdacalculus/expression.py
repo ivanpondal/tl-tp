@@ -3,7 +3,7 @@
 from . import LambdaError
 from exp_type import *
 
-__all__ = ["Expression", "Zero", "BoolExp", "Abstraction", "Variable", "Succ"]
+__all__ = ["Expression", "Zero", "BoolValue", "Abstraction", "Variable", "Succ"]
 
 
 class Expression(object):
@@ -24,26 +24,24 @@ class Expression(object):
         return str(self) + ":" + str(self._type)
 
     def if_else(self, if_true_expr, if_false_expr):
-        raise LambdaTypeError("ERROR: if condition should be of type Bool")
+        return IfThenElse(self, if_true_expr, if_false_expr)
 
     def succ(self):
-        raise LambdaTypeError("ERROR: succ expects a value of type Nat")
+        return Succ(self)
 
     def pred(self):
-        raise LambdaTypeError("ERROR: pred expects a value of type Nat")
+        return Pred(self)
 
     def is_zero(self):
-        raise LambdaTypeError("ERROR: iszero expects a value of type Nat")
+        return IsZero(self)
 
-    def apply(self,expr):
-        raise LambdaTypeError("ERROR: Left part of application (" +\
-        str(self) + ") is not a function of domain "+ \
-        str(expr.type()))
+    def apply(self, expr):
+        return Application(self, expr)
 
 
-class BoolExp(Expression):
+class BoolValue(Expression):
     def __init__(self, value):
-        super(BoolExp, self).__init__()
+        super(BoolValue, self).__init__()
         self._value = value
         self._type = BoolType()
 
@@ -77,7 +75,8 @@ class Abstraction(Expression):
             expr_arg.type().unify_with(self._var.type())
             return self._body_expr.substitute(str(self._var), expr_arg)
         except LambdaUnificationError:
-            raise LambdaTypeError("ERROR: left part of application is not a function with range " + str(expr_arg.type()))
+            raise LambdaTypeError("ERROR: Left part of application (" + str(left_expr) +
+                                  ") is not a function of domain" + str(expr_arg.type()))
 
     def __str__(self):
         return '\\' + str(self._var) + ':' + str(self._var.type()) + '.' + str(self._body_expr)
@@ -89,14 +88,19 @@ class Abstraction(Expression):
 
 class Application(Expression):
     def __init__(self, left_expr, right_expr):
+        # Check that left expression is an abstraction and its domain type is
+        # the same as the right expression type
+        try:
+            abstraction_unified_type = left_expr.type().unify_with(AbstractionType(right_expr.type(), TypeVar()))
+        except LambdaUnificationError:
+            raise LambdaTypeError("ERROR: Left part of application (" + str(left_expr) +
+                                  ") is not a function of domain " + str(right_expr.type()))
+
         super(Application, self).__init__()
         self._free_vars = left_expr.free_vars() | right_expr.free_vars()
         self._left_expr = left_expr
         self._right_expr = right_expr
-        try:
-            self._type = left_expr.type().body_type().unify_with(right_expr.type())
-        except LambdaUnificationError:
-            raise LambdaTypeError("ERROR: left part of application is not a function with range " + str(right_expr.type()))
+        self._type = abstraction_unified_type.body_type()
 
     def __str__(self):
         return str(self._left_expr) + " " + str(self._right_expr)
@@ -118,46 +122,6 @@ class Variable(Expression):
 
     def substitute(self, var_name, expr):
         return expr if var_name == self._name else self
-
-    def succ(self):
-        try:
-            self._type.unify_with(NatType())
-            return Succ(self)
-        except LambdaUnificationError:
-            raise LambdaTypeError("ERROR: succ expects a value of type Nat")
-
-    def pred(self):
-        try:
-            self._type.unify_with(NatType())
-            return Pred(self)
-        except LambdaUnificationError:
-            raise LambdaTypeError("ERROR: pred expects a value of type Nat")
-
-    def is_zero(self):
-        try:
-            self._type.unify_with(NatType())
-            return IsZero(self)
-        except LambdaUnificationError:
-            raise LambdaTypeError("ERROR: iszero expects a value of type Nat")
-
-    def if_else(self, if_true_expr, if_false_expr):
-        # Precondition: self is a variable, it could be anything.
-        # So if someone does if var then .... We need to construct the expression tree
-        try:
-            self._type.unify_with(BoolType())
-        except LambdaUnificationError:
-            raise LambdaTypeError("ERROR: if condition should be of type Bool")
-        try:
-            return IfThenElse(self, if_true_expr, if_false_expr)
-        except LambdaUnificationError:
-            raise LambdaTypeError("ERROR: Both if options should have the same type")
-
-    def apply(self, expr):
-        try:
-            self._type.unify_with(AbstractionType(expr.type(), TypeVar()))
-            return Application(self, expr)
-        except LambdaUnificationError:
-            raise LambdaTypeError("ERROR: left part of application is not a function with range " + str(expr.type()))
 
 
 class Zero(Expression):
@@ -186,11 +150,17 @@ class Zero(Expression):
     def is_zero(self):
         # Precondition: self represents "0"
         # so i'm zero.
-        return BoolExp(True)
+        return BoolValue(True)
 
 
 class Succ(Expression):
     def __init__(self, sub_expr):
+        # Check that subexpression unifies with type Nat
+        try:
+            sub_expr.type().unify_with(NatType())
+        except LambdaUnificationError:
+            raise LambdaTypeError("ERROR: succ expects a value of type Nat")
+
         super(Succ, self).__init__()
         self._free_vars = sub_expr.free_vars()
         self._sub_expr = sub_expr
@@ -217,11 +187,17 @@ class Succ(Expression):
     def is_zero(self):
         # Precondition: self represents "succ(E)", reduced.
         # so if someone asks if I'm zero, I depend on the free vars.
-        return BoolExp(False)
+        return BoolValue(False)
 
 
 class Pred(Expression):
     def __init__(self, sub_expr):
+        # Check that subexpression unifies with type Nat
+        try:
+            sub_expr.type().unify_with(NatType())
+        except LambdaUnificationError:
+            raise LambdaTypeError("ERROR: pred expects a value of type Nat")
+
         super(Pred, self).__init__()
         self._free_vars = sub_expr.free_vars()
         self._sub_expr = sub_expr
@@ -239,21 +215,27 @@ class Pred(Expression):
         # Postcondition: I return the subexpression tree, therefore reduced.
         return self._sub_expr
 
-    def pred(self):
-        # Precondition: self represents "pred(E)", reduced.
-        # So pred operation should make the tree grow.
-        # Poscondition: I return the new expression tree, also reduced.
-        return Pred(self)
-
-    def is_zero(self):
-        # Precondition: self represents "pred(E)", reduced.
-        # so if someone asks if I'm zero, I need to evaluate completely.
-        # My only choice is to grow the expression tree:
-        return IsZero(self)
+    # def pred(self):
+    #     # Precondition: self represents "pred(E)", reduced.
+    #     # So pred operation should make the tree grow.
+    #     # Poscondition: I return the new expression tree, also reduced.
+    #     return Pred(self)
+    #
+    # def is_zero(self):
+    #     # Precondition: self represents "pred(E)", reduced.
+    #     # so if someone asks if I'm zero, I need to evaluate completely.
+    #     # My only choice is to grow the expression tree:
+    #     return IsZero(self)
 
 
 class IsZero(Expression):
     def __init__(self, sub_expr):
+        # Check that subexpression unifies with type Nat
+        try:
+            sub_expr.type().unify_with(NatType())
+        except LambdaUnificationError:
+            raise LambdaTypeError("ERROR: iszero expects a value of type Nat")
+
         super(IsZero, self).__init__()
         self._free_vars = sub_expr.free_vars()
         self._sub_expr = sub_expr
@@ -265,21 +247,27 @@ class IsZero(Expression):
     def substitute(self, var_name, exp):
         return self._sub_expr.substitute(var_name, exp).is_zero()
 
-    def if_else(self, if_true_expr, if_false_expr):
-        return IfThenElse(self, if_true_expr, if_false_expr)
-
 
 class IfThenElse(Expression):
     def __init__(self, condition, if_true_expr, if_false_expr):
-        super(IfThenElse, self).__init__()
-        self._free_vars = condition.free_vars() | if_true_expr.free_vars() | if_false_expr.free_vars()
-        self._condition = condition
-        self._if_true_expr = if_true_expr
-        self._if_false_expr = if_false_expr
+        # Check that condition type unifies with Bool
         try:
-            self._type = if_true_expr.type().unify_with(if_false_expr.type())
+            condition.type().unify_with(BoolType())
+        except LambdaUnificationError:
+            raise LambdaTypeError("ERROR: if condition should be of type Bool")
+
+        # Check that both if options unify to a common type
+        try:
+            unified_type = if_true_expr.type().unify_with(if_false_expr.type())
         except LambdaUnificationError:
             raise LambdaTypeError("ERROR: Both if options should have the same type")
+
+        super(IfThenElse, self).__init__()
+        self._condition = condition
+        self._free_vars = condition.free_vars() | if_true_expr.free_vars() | if_false_expr.free_vars()
+        self._if_true_expr = if_true_expr
+        self._if_false_expr = if_false_expr
+        self._type = unified_type
 
     def __str__(self):
         return "if " + str(self._condition) + " then " + \
@@ -290,9 +278,6 @@ class IfThenElse(Expression):
         return self._condition.substitute(var_name, exp).if_else(
             self._if_true_expr.substitute(var_name, exp),
             self._if_false_expr.substitute(var_name, exp))
-
-    def if_else(self, if_true_expr, if_false_expr):
-        return self
 
 
 class LambdaTypeError(LambdaError):

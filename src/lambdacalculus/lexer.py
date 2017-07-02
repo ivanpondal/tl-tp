@@ -73,7 +73,7 @@ def t_ELSE(t):
 
 def t_BOOL(t):
     r'true|false'
-    t.value = BoolExp(True if t.value == 'true' else False)
+    t.value = BoolValue(True if t.value == 'true' else False)
     return t
 
 def t_ZERO(t):
