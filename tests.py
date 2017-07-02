@@ -93,8 +93,14 @@ class TestsLambdaCalculus(TestCase):
     def test_application_repeated_variable_total_application(self):
         self.assertEquals('succ(0):Nat', str_parse('((\\x:Nat.\\x:Nat.succ(x)) succ(0)) 0'))
 
-    def test_application_sucesive(self):
+    def test_application_successive(self):
         self.assertEquals('0:Nat', str_parse('(\\x:Nat.\\y:Nat.pred(y)) succ(0) 0'))
+
+    def test_application_in_abstraction(self):
+        self.assertEquals('\\f:Nat->Nat.\\x:Nat.f x:(Nat->Nat)->Nat->Nat', str_parse('\\f:Nat->Nat.\\x:Nat.f x'))
+
+    def test_application_in_applied_abstraction(self):
+        self.assertEquals('\\x:Nat.x:Nat->Nat', str_parse('(\\f:Nat->Nat.\\x:Nat.f x) \\x:Nat.x'))
 
     # def test_application_with_variables(self):
     #     self.assertEquals('0:Nat', str_parse('(\\x:Nat->Nat.\\y:Nat.x y) (\\z:Nat.succ(z)) 0'))
@@ -102,6 +108,7 @@ class TestsLambdaCalculus(TestCase):
     # Free Term tests
 
     def test_evaluates_until_non_closed_term(self):
+        # TODO: See what happens with this test after reviewing grammar
         self.assertEquals('ERROR: Non-closed term (y, x are free)',str_parse('(\\z:Nat.pred(succ(z))) \\x:Nat.y x'))
 
     # Examples provided in the task assignment
