@@ -24,6 +24,7 @@ muestra aquí abajo.
 tokens = (
     'BOOL',
     'ZERO',
+    'NAT',
     'VAR',
     'TYPE',
     'SUCC_OPEN',
@@ -99,6 +100,14 @@ def t_DOT(t):
 def t_VAR(t):
     r'[a-z]\w*'
     t.value = Variable(t.value)
+    return t
+
+def t_NAT(t):
+    r'\d+'
+    number = int(t.value)
+    t.value = Zero()
+    for i in range(number):
+        t.value = Succ(t.value)
     return t
 
 # Build the lexer

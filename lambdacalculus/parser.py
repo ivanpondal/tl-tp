@@ -53,6 +53,10 @@ def p_expression_prime_var(p):
     'expression_prime : VAR'
     p[0] = p[1]
 
+def p_expression_prime_nat(p):
+    'expression_prime : NAT'
+    p[0] = p[1]
+
 def p_type_arrow(p):
     'type : type_prime ARROW type'
     p[0] = AbstractionType(p[1], p[3])
