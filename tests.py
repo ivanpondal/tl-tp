@@ -108,6 +108,12 @@ class TestsLambdaCalculus(TestCase):
     def test_application_in_abstraction(self):
         self.assertEquals('\\f:Nat->Nat.\\x:Nat.f x:(Nat->Nat)->Nat->Nat', str_parse('\\f:Nat->Nat.\\x:Nat.f x'))
 
+    def test_application_of_abstraction(self):
+        self.assertEquals('\\x:Nat.succ(x):Nat->Nat', str_parse('(\\f:Nat->Nat.f) \\x:Nat.succ(x)'))
+
+    def test_application_of_if(self):
+        self.assertEquals('0:Nat', str_parse('(\y:Bool.(\\x:Nat.x) if y then 0 else succ(0)) true'))
+
     def test_application_in_applied_abstraction(self):
         self.assertEquals('\\x:Nat.x:Nat->Nat', str_parse('(\\f:Nat->Nat.\\x:Nat.f x) \\x:Nat.x'))
 
