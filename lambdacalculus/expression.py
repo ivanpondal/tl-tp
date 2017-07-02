@@ -145,9 +145,12 @@ class Variable(Expression):
         # So if someone does if var then .... We need to construct the expression tree
         try:
             self._type.unify_with(BoolType())
-            return IfThenElse(self, if_true_expr, if_false_expr)
         except LambdaUnificationError:
             raise LambdaTypeError("ERROR: if condition should be of type Bool")
+        try:
+            return IfThenElse(self, if_true_expr, if_false_expr)
+        except LambdaUnificationError:
+            raise LambdaTypeError("ERROR: Both if options should have the same type")
 
     def apply(self, expr):
         try:
@@ -275,7 +278,7 @@ class IfThenElse(Expression):
         self._if_false_expr = if_false_expr
         try:
             self._type = if_true_expr.type().unify_with(if_false_expr.type())
-        except LambdaUnificationError():
+        except LambdaUnificationError:
             raise LambdaTypeError("ERROR: Both if options should have the same type")
 
     def __str__(self):
