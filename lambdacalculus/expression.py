@@ -93,7 +93,10 @@ class Application(Expression):
         self._free_vars = left_expr.free_vars() | right_expr.free_vars()
         self._left_expr = left_expr
         self._right_expr = right_expr
-        self._type = left_expr.type().body_type()
+        try:
+            self._type = left_expr.type().body_type().unify_with(right_expr.type())
+        except LambdaUnificationError:
+            raise LambdaTypeError("ERROR: left part of application is not a function with range " + str(right_expr.type()))
 
     def __str__(self):
         return str(self._left_expr) + " " + str(self._right_expr)
