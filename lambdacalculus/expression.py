@@ -32,6 +32,11 @@ class Expression(object):
     def is_zero(self):
         raise LambdaTypeError("ERROR: iszero expects a value of type Nat")
 
+    def apply(self,expr):
+        raise LambdaTypeError("ERROR: Left part of application (" +\
+        str(self) + ") is not a function of domain "+ \
+        str(expr.type()))
+
 
 class BoolExp(Expression):
     def __init__(self, value):

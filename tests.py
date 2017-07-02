@@ -117,32 +117,32 @@ class TestsLambdaCalculus(TestCase):
     def test_example_abstraction_succ(self):
         self.assertEquals('\\x:Nat.succ(0):Nat->Nat',str_parse('\\x:Nat.succ(0)'))
 
-    def test_example_(self):   
+    def test_example_print_abstraction(self):   
         self.assertEquals('\\z:Nat.z:Nat->Nat',str_parse('\\z:Nat.z'))
 
-    def test_example_(self):   
+    def test_example_abstraction_type_application(self):   
         self.assertEquals('ERROR: succ expects type Nat',str_parse('\\x:Bool.succ(x)) true'))
 
-    def test_example_(self):   
+    def test_example_typing_nat(self):   
         self.assertEquals('succ(succ(succ(0))):Nat',str_parse('succ(succ(succ(0)))'))
 
-    def test_example_(self):   
+    def test_example_error_free_var(self):   
         self.assertEquals('ERROR: Non closed term. "x" is free',str_parse('x'))
 
-    def test_example_(self):   
+    def test_example_reduction_succ_pred(self):   
         self.assertEquals('succ(succ(0)):Nat',str_parse('succ(succ(pred(0)))'))
 
-    def test_example_(self):   
+    def test_example_typing_abstraction(self):   
         self.assertEquals('\\x:Nat.succ(x):Nat->Nat',str_parse('\\x:Nat.succ(x)'))
 
-    def test_example_(self):   
-        self.assertEquals('ERROR: Left par of application (0) is not a function of domain Nat',\
+    def test_example_error_not_a_function(self):   
+        self.assertEquals('ERROR: Left part of application (0) is not a function of domain Nat',\
             str_parse('0 0'))
 
-    def test_example_(self):   
+    def test_example_typing_multiple_abstraction(self):   
         self.assertEquals('\\x:Nat->Nat.\\y:Nat.(\\z:Bool.if z then x y else 0):(Nat->Nat)->(Nat->(Bool->Nat))',\
             str_parse('\\x:Nat->Nat.\\y:Nat.(\\z:Bool.if z then x y else 0)'))
 
-    def test_example_(self):   
+    def test_example_applying_multiple_abstraction(self):   
         self.assertEquals('succ(succ(succ(succ(succ(succ(succ(succ(succ(0))))))))):Nat',\
             str_parse('(\\x:Nat->Nat.\\y:Nat.(\\z:Bool.if z then x y else 0)) (\\j:Nat.succ(j)) succ(succ(succ(succ(succ(succ(succ(succ(0)))))))) true'))
