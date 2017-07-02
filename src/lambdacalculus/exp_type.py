@@ -66,7 +66,6 @@ class NatType(ExpType):
 class AbstractionType(ExpType):
 
     def __init__(self, arg_type, body_type, arg_name=None):
-        # TODO: Fix bug with anonymous type variables
         self._arg_name = arg_name
         self._arg_type = arg_type
         self._body_type = body_type.bind(arg_name, arg_type)

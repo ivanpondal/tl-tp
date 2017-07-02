@@ -65,9 +65,9 @@ class Abstraction(Expression):
         self._free_vars = body_expr.free_vars() - {str(var)}
         self._var = Variable(str(var), arg_type)
         self._body_expr = body_expr.substitute(str(var), self._var)
-        self._type = AbstractionType(var_type=arg_type,
-                                     body_type=body_expr.type(),
-                                     var_name=str(var))
+        self._type = AbstractionType(arg_type,
+                                     self._body_expr.type(),
+                                     str(var))
 
 
     def apply(self, expr_arg):
@@ -83,7 +83,8 @@ class Abstraction(Expression):
 
     def substitute(self, var_name, expr):
         return self if var_name == str(self._var) else \
-            Abstraction(self._var, self._var.type(), self._body_expr.substitute(var_name, expr))
+            Abstraction(self._var, self._var.type(),
+                        self._body_expr.substitute(var_name, expr))
 
 
 class Application(Expression):
@@ -107,7 +108,7 @@ class Application(Expression):
         return str(self._left_expr) + " " + str(self._right_expr)
 
     def substitute(self, var_name, expr):
-        return self._left_expr.substitute(var_name, expr)\
+        return self._left_expr.substitute(var_name, expr) \
             .apply(self._right_expr.substitute(var_name, expr))
 
 
