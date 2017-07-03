@@ -4,6 +4,11 @@
 \usepackage[utf8]{inputenc}
 \usepackage[spanish,activeacute]{babel}
 
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+\usepackage{amsmath,amssymb,amsthm,mathabx,mathtools}
+
 % ----------------------------------------------------------------------------
 
 \materia{Teoría de Lenguajes}
@@ -14,7 +19,7 @@
 
 \integrante{Franco Frizzo}{013/14}{francofrizzo@gmail.com}
 \integrante{Iván Pondal}{078/14}{ivan.pondal@gmail.com}
-\integrante{Alfredo Sanzo}{}{alfredo.sanzo@gmail.com}
+\integrante{Alfredo Sanzo}{-}{alfredo.sanzo@gmail.com}
 
 % ----------------------------------------------------------------------------
 
@@ -59,22 +64,65 @@
 
 \newpage
 
-% ----------------------------------------------------------------------------
+% ============================================================================
 
 \section{Introducción}
+
 En este trabajo, presentamos la implementación de un analizador léxico,
 sintáctico y semántico para el cálculo lambda tipado con valores de verdad
 (\emph{booleanos}) y números naturales ($\lambda^{bn}$).
 
+Para ello utilizamos la herramienta \textsc{PLY}(Python Lex-Yacc) que dada
+el conjunto de tokens y gramática de atributos del lenguaje a implementar,
+ genera un parser \textsc{LALR} para la misma.
 
-\section{Gramática}
+\section{Formalización del lenguaje}
+
+\subsection{Analizador léxico: \emph{tokens}}
+
+
+
+\subsection{Analizador sintáctico: gramática}
+
+\begin{tabular}{rrl}
+$S$  & $\rightarrow$ \qquad & $E$ \\
+$E$  & $\rightarrow$ \qquad & \verb|if |$E$\verb| then |$E$\verb| else |$E$ \\
+     & $\vert$              & \verb|\var:|$T$\verb|.|$E$ \\
+     & $\vert$              & $A$ \\
+$A$  & $\rightarrow$ \qquad & $A$\verb| |$E'$ \\
+     & $\vert$              & $E'$ \\
+$E'$ & $\rightarrow$ \qquad & \verb|(|$E$\verb|)| \\
+     & $\vert$              & \verb|succ(|$E$\verb|)| \\
+     & $\vert$              & \verb|pred(|$E$\verb|)| \\
+     & $\vert$              & \verb|iszero(|$E$\verb|)| \\
+     & $\vert$              & \verb|0| \\
+     & $\vert$              & \verb|nat| \\
+     & $\vert$              & \verb|bool| \\
+     & $\vert$              & \verb|var| \\
+$T$  & $\rightarrow$ \qquad & $T'$\verb|->|$T$ \\
+     & $\vert$              & $T'$ \\
+$T'$ & $\rightarrow$ \qquad & \verb|type| \\
+     & $\vert$              & \verb|(|$T$\verb|)| \\
+\end{tabular}
+
+% ============================================================================
 
 \section{Implementación}
 
+
+
+% ============================================================================
+
 \section{Casos de prueba}
+
+% ============================================================================
 
 \section{Manual del usuario}
 
+% ============================================================================
+
 \section{Conclusiones}
+
+% ============================================================================
 
 \end{document}
