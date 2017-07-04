@@ -68,19 +68,30 @@
 
 \section{Introducción}
 
+% - Breve introducción al problema a resolver.
+
 En este trabajo, presentamos la implementación de un analizador léxico,
 sintáctico y semántico para el cálculo lambda tipado con valores de verdad
 (\emph{booleanos}) y números naturales ($\lambda^{bn}$).
 
-Para ello utilizamos la herramienta \textsc{PLY}(Python Lex-Yacc) que dada
-el conjunto de tokens y gramática de atributos del lenguaje a implementar,
+Para ello utilizamos la herramienta \textsc{PLY}(Python Lex-Yacc) que dados
+el conjunto de \emph{tokens} y gramática de atributos del lenguaje a implementar,
  genera un parser \textsc{LALR} para la misma.
+
+% ============================================================================
 
 \section{Formalización del lenguaje}
 
+% - Los tokens, con sus expresiones regulares, y la gramática no ambigua
+%   definidos a partir del lenguaje propuesto.
+% - Indicación del tipo de la gramática definida, de acuerdo a los
+%   vistos en clase.
+
+% ----------------------------------------------------------------------------
+
 \subsection{Analizador léxico: \emph{tokens}}
 
-
+% ----------------------------------------------------------------------------
 
 \subsection{Analizador sintáctico: gramática}
 
@@ -109,19 +120,34 @@ $T'$ & $\rightarrow$ \qquad & \verb|type| \\
 
 \section{Implementación}
 
-
+% - Descripción de cómo se implementó la solución, con decisiones que hayan
+%   tenido que tomar y justificación de las mismas.
+% - El código de la solución, y, si se usaron herramientas generadoras de
+%   código, imprimir la fuente ingresada a la herramienta, no el código
+%   generado (ver si dejar esto para un anexo).
 
 % ============================================================================
 
 \section{Casos de prueba}
 
+% - Casos de prueba con expresiones sintácticamente correctas e incorrectas
+%   (al menos tres para cada caso).
+
 % ============================================================================
 
 \section{Manual del usuario}
 
+% - Información y requerimientos de software para ejecutar y recompilar el TP
+%   (versiones de compiladores, herramientas, plataforma, etc.), como un
+%   pequeño manual del usuario, que además de los requerimientos, contenga
+%   instrucciones para compilarlo, ejecutarlo, información de parámetros y
+%   lo que consideren necesario.
+
 % ============================================================================
 
 \section{Conclusiones}
+
+% - Un resumen de los resultados obtenidos, y conclusiones del trabajo.
 
 % ============================================================================
 
