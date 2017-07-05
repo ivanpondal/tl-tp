@@ -2,12 +2,58 @@
 \usepackage{caratula}
 
 \usepackage[utf8]{inputenc}
-\usepackage[spanish,activeacute]{babel}
+\usepackage[spanish, es-tabla, activeacute]{babel}
 
 \usepackage{lmodern}
 \usepackage[T1]{fontenc}
 
+\usepackage{float}
+
 \usepackage{amsmath,amssymb,amsthm,mathabx,mathtools}
+
+% ----------------------------------------------------------------------------
+% Code listings
+
+\usepackage{listingsutf8}
+\lstset{
+    basicstyle=\ttfamily,
+    commentstyle=\color{gray},
+    keywordstyle=\textbf,
+    basewidth=0.5em,
+    breaklines=true,
+    keepspaces=true,
+    breakatwhitespace=true,
+    showspaces=false,
+    showtabs=false,
+    showstringspaces=false,
+    xleftmargin=\parindent,
+    inputencoding=utf8/latin1,
+    literate={á}{{\'a}}1{é}{{\'e}}1{í}{{\'i}}1{ó}{{\'o}}1{ú}{{\'u}}1
+        {Á}{{\'A}}1{É}{{\'E}}1{Í}{{\'I}}1{Ó}{{\'O}}1{Ú}{{\'U}}1
+        {ü}{{\"u}}1{Ü}{{\"U}}1{ñ}{{\~n}}1{Ñ}{{~N}}1,
+    language=Python
+}
+
+% ----------------------------------------------------------------------------
+% Class diagrams
+% The following is needed in order to make the code compatible
+% with both latex/dvips and pdflatex.
+\ifx\pdftexversion\undefined
+\usepackage[dvips]{graphicx}
+\else
+\usepackage[pdftex]{graphicx}
+\DeclareGraphicsRule{*}{mps}{*}{}
+\fi
+
+% ----------------------------------------------------------------------------
+% Custom commands
+\newcommand\produces{$\rightarrow$ \qquad}
+\newcommand\alsoproduces{$\vert$}
+
+% Continous enumerations
+\newcounter{savedenum}
+\newcommand{\saveenum}{\setcounter{savedenum}{\theenumi}}
+\newcommand{\loadenum}{\setcounter{enumi}{\thesavedenum}}
 
 % ----------------------------------------------------------------------------
 
@@ -23,6 +69,12 @@
 
 % ----------------------------------------------------------------------------
 
+\usepackage[style=numeric,backend=biber]{biblatex}
+\addbibresource{refs.bib}
+
+% ----------------------------------------------------------------------------
+% Format
+
 \usepackage[a4paper,
             left=2.53cm,
             right=2.3cm,
@@ -32,6 +84,7 @@
 \usepackage[colorlinks=true,
             linkcolor={blue!75!black},
             urlcolor={blue!75!black},
+            citecolor={green!50!black},
             bookmarks=true]{hyperref}
 
 \setlength\parskip{.3em}
@@ -59,7 +112,6 @@
 \maketitle
 
 \newpage
-\newpage
 \tableofcontents
 
 \newpage
@@ -70,13 +122,23 @@
 
 % - Breve introducción al problema a resolver.
 
-En este trabajo, presentamos la implementación de un analizador léxico,
-sintáctico y semántico para el cálculo lambda tipado con valores de verdad
-(\emph{booleanos}) y números naturales ($\lambda^{bn}$).
+En este trabajo, presentamos la implementación de un intérprete para el
+cálculo lambda tipado con valores de verdad (\emph{booleanos}) y números
+naturales ($\lambda^{bn}$)\cite{clase-plp}, compuesto por un analizador
+léxico, sintáctico y semántico de dicho lenguaje.
 
-Para ello utilizamos la herramienta \textsc{PLY}(Python Lex-Yacc) que dados
-el conjunto de \emph{tokens} y gramática de atributos del lenguaje a implementar,
- genera un parser \textsc{LALR} para la misma.
+Para ello utilizamos la herramienta \textsc{ply} (Python Lex-Yacc)
+\cite{ply-docs} que dados el conjunto de \emph{tokens} y gramática de
+atributos del lenguaje implementar, genera un parser \textsc{lalr} para la
+misma.
+
+El desafío entonces consiste principalmente en resolver dos problemas.
+Por un lado, definir una gramática que además de generar el lenguaje deseado
+forzara ciertas propiedades del mismo como la asociatividad y precedencia de
+operadores.
+Por otra parte, desarrollar la semántica de forma tal que las expresiones
+bien tipadas evaluaran de la forma esperada, según lo define la semántica
+\emph{small-step} del cálculo lambda.
 
 % ============================================================================
 
@@ -87,38 +149,367 @@ el conjunto de \emph{tokens} y gramática de atributos del lenguaje a implementa
 % - Indicación del tipo de la gramática definida, de acuerdo a los
 %   vistos en clase.
 
+Como punto de partida, es necesario formalizar el lenguaje de manera clara,
+separando y detallando los elementos correspondientes al análisis léxico,
+a la sintaxis y a la semántica. En esta sección, exponemos los detalles de
+esta formalización.
+
 % ----------------------------------------------------------------------------
 
-\subsection{Analizador léxico: \emph{tokens}}
+\subsection{Análisis léxico: \emph{tokens}}
 
-% ----------------------------------------------------------------------------
-
-\subsection{Analizador sintáctico: gramática}
-
-\begin{tabular}{rrl}
-$S$  & $\rightarrow$ \qquad & $E$ \\
-$E$  & $\rightarrow$ \qquad & \verb|if |$E$\verb| then |$E$\verb| else |$E$ \\
-     & $\vert$              & \verb|\var:|$T$\verb|.|$E$ \\
-     & $\vert$              & $A$ \\
-$A$  & $\rightarrow$ \qquad & $A$\verb| |$E'$ \\
-     & $\vert$              & $E'$ \\
-$E'$ & $\rightarrow$ \qquad & \verb|(|$E$\verb|)| \\
-     & $\vert$              & \verb|succ(|$E$\verb|)| \\
-     & $\vert$              & \verb|pred(|$E$\verb|)| \\
-     & $\vert$              & \verb|iszero(|$E$\verb|)| \\
-     & $\vert$              & \verb|0| \\
-     & $\vert$              & \verb|nat| \\
-     & $\vert$              & \verb|bool| \\
-     & $\vert$              & \verb|var| \\
-$T$  & $\rightarrow$ \qquad & $T'$\verb|->|$T$ \\
-     & $\vert$              & $T'$ \\
-$T'$ & $\rightarrow$ \qquad & \verb|type| \\
-     & $\vert$              & \verb|(|$T$\verb|)| \\
+\begin{table}[h] \centering
+\begin{tabular}{rl}
+Nombre                  & Expresión regular \\ \hline
+\verb|SUCC_OPEN|        & \verb|succ(| \\
+\verb|PRED_OPEN|        & \verb|pred(| \\
+\verb|ISZERO_OPEN|      & \verb|iszero(| \\
+\verb|IF|               & \verb|if| \\
+\verb|THEN|             & \verb|then| \\
+\verb|ELSE|             & \verb|else| \\
+\verb|BOOL|             & \verb|true||\verb|false| \\
+\verb|ZERO|             & \verb|0| \\
+\verb|TYPE|             & \verb|Bool||\verb|Nat| \\
+\verb|LAMBDA|           & \verb|\| \\
+\verb|COLON|            & \verb|:| \\
+\verb|DOT|              & \verb|.| \\
+\verb|VAR|              & \verb|[a-z]w*| \\
+\verb|PAR_CLOSE|        & \verb|)| \\
+\verb|PAR_OPEN|         & \verb|(| \\
+\verb|ARROW|            & \verb|->| \\
 \end{tabular}
+\caption{\emph{Tokens} del analizador léxico.}
+\label{table:tokens-lexer}
+\end{table}
+
+La primera etapa de nuestro intérprete es el analizador léxico, cuyo objetivo
+es reconocer \emph{tokens} en las cadenas del lenguaje. Esto permite agrupar
+elementos equivalentes desde un punto de vista sintáctico (por ejemplo, los
+nombres de las variables), simplificando las etapas posteriores. Estos
+\emph{tokens}, a su vez, se convertirán luego en los símbolos terminales
+de la gramática de atributos que define la sintaxis del lenguaje.
+
+Los \emph{tokens} que componen nuestro analizador léxico son los que
+presentamos en la Tabla \ref{table:tokens-lexer}, acompañados por la expresión
+regular que se utiliza para reconocerlos.
+
+Algunos de ellos, al momento de ser detectados por el analizador léxico,
+adquieren inmediatamente un atributo sintetizado (\verb|value|), que será
+útil más adelante. Se trata de los siguientes \emph{tokens}:
+\begin{itemize}
+\item \verb|BOOL|, cuyo \verb|value| puede ser \verb|true| o
+	\verb|false|, representando así los dos valores de verdad posibles.
+\item \verb|TYPE|, cuyo \verb|value| puede ser \verb|Bool| o
+	\verb|Nat|, representando así los dos tipos básicos posibles.
+\item \verb|VAR|, cuyo \verb|value| es la cadena que fue capturada
+	por la expresión regular, que representa el nombre de la variable.
+\end{itemize}
+
+Nos parece importante, además, mencionar algunas cuestiones que fueron
+tenidas en cuenta al definir los \emph{tokens}:
+\begin{itemize}
+\item \textsc{ply} nos permitió definir un orden de chequeo de las expresiones
+	regulares; de esta forma, tokens como \verb|then| o
+    \verb|false| son reconocidos correctamente, en lugar de tomarse
+    como nombres de variables. El orden elegido es el expuesto en la tabla.
+  
+\item En el código también se encuentra definido el \emph{token} \verb|NAT|, no detallado aquí por simplicidad. El mismo \emph{matchea} con cualquier número natural distinto de cero que no se encuentre dentro del nombre de una variable. Esto permite ingresar un número como parte de una expresión y que este sea parseado correctamente. A la hora de ser parseado, este \emph{token} es convertido en una expresión del tipo \verb|succ(succ(...succ(0)...))|.
+  
+\item Los \emph{tokens} \verb|BOOL| y \verb|TYPE| pueden tomar únicamente dos valores diferentes en cada caso. También podríamos haber definido la gramática con más símbolos terminales, de modo de aceptar alternativamente uno u otro valor, pero consideramos que esto era un poco más complejo innecesariamente.
+\end{itemize}
+
+% ----------------------------------------------------------------------------
+
+\subsection{Análisis sintáctico: gramática}
+
+La sintaxis del lenguaje fue formalizada mediante una gramática no ambigua,
+definiendo así las expresiones bien formadas y permitiendo reconocer su
+estructura.
+
+% OJO: Aclarar que si bien es una gramática de atributos, por claridad
+%      no vamos a escribir acá cuáles van a ser esos atributos. Eso va
+%      a quedar explicitado cuando hablemos de semántica y de implementación.
+% Piden decir de qué tipo es la gramática, no nos olvidemos de eso.
+% También hay que documentar bien qué cosas *no* se pueden hacer con esta
+% gramática (lambda/ifthenelse a la derecha de una aplicación) y por qué
+% decidimos que quede así.
+
+\[ \mathcal{G}_{\lambda} = \left\langle
+	\mathcal{V}_N,\ \mathcal{V}_T,\ \mathcal{P},\ S \right\rangle \]
+
+\[ \mathcal{V}_N = \left\lbrace S,\ E,\ E',\ A,\ T,\ T' \right\rbrace \]
+
+\[ \mathcal{V}_T = \left\lbrace
+	\verb|succ(|,\ \verb|pred(|,\ \verb|iszero(|,\ 
+	\verb|if|,\ \verb|then|,\ \verb|else|,\ \verb|bool|,\ 
+    \verb|0|,\ \verb|type|,\ \verb|\|,\ \verb|:|,\ \verb|.|,\ 
+    \verb|var|,\ \verb|(|,\ \verb|)|,\ \verb|->|
+    \right\rbrace \]
+
+\begin{figure}[H] \centering
+% TODO: Ver bien cómo ubicar estas figuras. Por ahí directamente hacer que
+%       dejen de ser figuras.
+\begin{tabular}{lrrl}
+$\mathcal{P}:$
+& $S$  & \produces     & $E$ \\
+& $E$  & \produces     & $\verb|if | E \verb| then | E \verb| else | E$ \\
+&      & \alsoproduces & $\verb|\var:| T \verb|.| E$ \\
+&      & \alsoproduces & $A$ \\
+& $A$  & \produces     & $A \verb| | E'$ \\
+&      & \alsoproduces & $E'$ \\
+& $E'$ & \produces     & $\verb|(| E \verb|)|$ \\
+&      & \alsoproduces & $\verb|succ(| E \verb|)|$ \\
+&      & \alsoproduces & $\verb|pred(| E \verb|)|$ \\
+&      & \alsoproduces & $\verb|iszero(| E \verb|)|$ \\
+&      & \alsoproduces & $\verb|0|$ \\
+&      & \alsoproduces & $\verb|nat|$ \\
+&      & \alsoproduces & $\verb|bool|$ \\
+&      & \alsoproduces & $\verb|var|$ \\
+& $T$  & \produces     & $T' \verb|->| T$ \\
+&      & \alsoproduces & $T'$ \\
+& $T'$ & \produces     & $\verb|type|$ \\
+&      & \alsoproduces & $\verb|(| T \verb|)|$ \\
+\end{tabular}
+\caption{Producciones de la gramática $\mathcal{G}_{\lambda}$.}
+\label{fig:gramatica}
+\end{figure}
+
+\begin{figure}[H] \centering
+\begin{tabular}{lrrl}
+$\mathcal{P}':$
+& $E$  & \produces     & $\verb|if | E \verb| then | E \verb| else | E$ \\
+&      & \alsoproduces & $\verb|\var:| T \verb|.| E$ \\
+&      & \alsoproduces & $A$ \\
+& $A$  & \produces     & $A \verb| | E'$ \\
+&      & \alsoproduces & $E'$ \\
+& $E'$ & \produces     & $\verb|(| E \verb|)|$ \\
+&      & \alsoproduces & $\verb|succ(| E \verb|)|$ \\
+&      & \alsoproduces & $\verb|pred(| E \verb|)|$ \\
+&      & \alsoproduces & $\verb|iszero(| E \verb|)|$ \\
+&      & \alsoproduces & $\verb|0|$ \\
+&      & \alsoproduces & $\verb|nat|$ \\
+&      & \alsoproduces & $\verb|bool|$ \\
+&      & \alsoproduces & $\verb|var|$ \\
+& $T$  & \produces     & $T' \verb|->| T$ \\
+&      & \alsoproduces & $T'$ \\
+& $T'$ & \produces     & $\verb|type|$ \\
+&      & \alsoproduces & $\verb|(| T \verb|)|$ \\
+\end{tabular}
+\caption{Producciones de la gramática original ($\mathcal{G}'_{\lambda}$).}
+\label{fig:gramatica-original}
+\end{figure}
+
+% ----------------------------------------------------------------------------
+
+\subsection{Análisis semántico: evaluación y tipos}
+
+La interpretación de una expresión se completa con su análisis semántico.
+En esta etapa, se persiguen principalmente dos objetivos: verificar que la
+expresión analizada esté correctamente tipada, y obtener el valor resultante
+de su evaluación. Para esto se tienen en cuenta, respectivamente, las reglas
+de tipado y la semántica de evaluación \emph{small-step} del cálculo lambda.
+
+Dado que el mecanismo mecanismo por el cual tiene lugar este análisis
+semántico está fuertemente relacionado con los detalles implementativos,
+dejamos su exposición detallada para la próxima sección.
+Por ahora, solo mencionaremos que a grandes rasgos, el análisis semántico se
+realiza de manera \emph{bottom-up}, a medida que el parser construye el
+\textsc{ast} de la expresión.
+Es decir, cada vez que tiene lugar un \emph{shift} o un \emph{reduce},
+el nuevo subárbol que se construye es analizado semánticamente.
+En este sentido, si bien no está especificado con el mismo formalismo, el
+método usado tiene características similares a una traducción dirigida por la
+sintaxis: es el parser quien determina por completo el orden en que
+se va llevando a cabo el análisis semántico.
 
 % ============================================================================
 
 \section{Implementación}
+
+Como ya mencionamos anteriormente, implementamos el programa en Python,
+utilizando la herramienta \textsc{ply}. En esta sección, describimos a
+grandes rasgos ĺas características de esta implementación, enfocándonos
+principalmente en los desafíos que se nos presentaron y las decisiones más
+relevantes que fuimos tomando.
+
+\subsection{Estrategia inicial descartada}
+% Cuidado con esto: fue exactamente lo que Juan Manuel dijo que esperaban
+% que hiciéramos. No sé si dejaría esta parte.
+En principio, encaramos la solución tomando un ejemplo de \textsc{ply} en el que se construía un árbol de objetos que representaba el \textsc{ast} completo sin reducir de la expresión de entrada, hasta completarse la lectura de la cadena. La idea era que en ese momento se gatillaría la reducción y chequeo final de tipos. Sin embargo, revisamos esto tras diversas consultas, antes de haber producido un avance significativo. Optamos por un enfoque más similar a lo visto en la materia, utilizado con gramáticas de atributos.
+
+\subsection{Evaluación de expresiones}
+\label{sec:reduccion}
+
+En la estrategia finalmente utilizada, resolvimos la evaluación y chequeo de tipos a través de la aplicación de un modelo de objetos en el que se construye un árbol que representa la expresión. Esta construcción se realiza de manera \emph{bottom-up} a medida que se realiza el parseo, y respetando siempre el siguiente invariante:
+
+\emph{En cada momento del parseo en el que se aplica una producción, obtenemos una representación de la expresión que está tan reducida como es posible}.
+
+Por ``reducida'' debe entenderse que la expresión están ``tan cerca'' de ser un
+valor como es posible; en términos de cálculo lambda, lo que se tiene es el
+resultado del juicio de evaluación \emph{big-step} de la subexpresión que
+se está parseando.
+
+Para lograrlo elegimos el objeto que representa al no terminal del cual depende la reducción, y le enviamos un mensaje polimórfico. Esto desencadena, si es posible, la aplicación de un paso de evaluación sobre la expresión.
+
+El caso más simple es $E' \rightarrow \verb|succ(|E\verb|)|$, en el que se realiza
+$E' \verb|:=| E\verb|.succ()|$. Otro ejemplo que explicita también la responsabilidad es $E_0 \rightarrow \verb|if | E_1 \verb| then | E_2 \verb| else | E_3$, donde se realiza
+$E_0 \verb|:=| E_1 \verb|.ifelse(| E_2 \verb|,| E_3 \verb|)|$, ya que la reducción de la expresión depende de la condición. En ambos casos, que se desencadene o no un paso de evaluación dependerá de las expresiones $E$ o $E_1$, respectivamente.
+
+Esta decisión flexibiliza el agregado de operaciones al lenguaje, ya que no hay que modificar código existente sino solo agregar un objeto polimórfico. Además, establece un lugar para la definición de la semántica de evaluación: lo que sucede al aplicar una operación se define en cada una de las clases que representan los nodos del árbol de la expresión.
+
+En la Figura \ref{fig:diagrama-clases} puede verse el diagrama de clases que representa este mecanismo de reducción.
+
+\begin{figure}[h] \centering
+\includegraphics{diagramas.1}
+\caption{Diagrama de clases que ilustra el mecanismo de reducción
+	implementado.}
+\label{fig:diagrama-clases}
+\end{figure}
+
+En la superclase \lstinline|Expression| cada mensaje construye el árbol de la expresión agregando el nodo correspondiente (es decir, no se produce evaluación alguna), pero en las subclases redefinimos los métodos correspondientes a las evaluaciones que se saben seguras. 
+
+Por ejemplo, el método \lstinline|succ()| de la clase \lstinline|Expression| construye un objeto \lstinline|Succ|. Esto permite manejar correctamente, por ejemplo, el caso en que el input es \verb|succ(x)|: lo que se obtiene es un árbol donde el objeto \lstinline|Succ| es la raíz y hay un objeto \lstinline|Variable| que es la hoja.
+
+Por otro lado, en el caso del input \verb|pred(succ(x))|, el objeto
+\lstinline|Succ| mencionado anteriormente recibe el mensaje
+\lstinline|pred()|. Siguiendo la definición de la semántica
+\emph{small-step} del cálculo lambda (en este caso particular, la regla
+\textsc{E-PredSucc}), esto desencadena un paso de evaluación, resultando en
+un único objeto \lstinline|Variable| en el árbol.
+
+\subsection{Aplicación y sustitución}
+
+La estrategia de aplicación merece su consideración particular. Al reducir mediante la producción $A \rightarrow A_1 \verb| | E'$, se ejecuta $A \verb|:=| A_1\verb|.apply(|E'\verb|)|$. Si $A_1$ se trata de una abstracción, se desencadena el método \lstinline|apply| de la clase \lstinline|Abstraction|, que devuelve el cuerpo de la abstracción, pero con sustituyendo la variable allí ligada por la expresión $E'$. Esto también se corresponde con la semántica de evaluación definida para el cálculo lambda; más específicamente, con el mecanismo de $\beta$-reducción.
+
+La sustitución consiste en atravesar recursivamente el árbol de la expresión \lstinline|Abstraction|, utilizando el mensaje polimórfico \lstinline|substitute(var_name, expr)|.\footnote{Se trata de una clásica implementación del patrón de diseño Composite.}
+El diagrama de clases no lo dibujamos aquí porque es simple: todas las subclases de \lstinline|Expression| entienden el mensaje \lstinline|substitute|.
+
+Este mensaje se ocupa de \emph{reconstruir la raíz del árbol, para que se realice el chequeo de tipos y reducciones correspondientes}; esta reconstrucción se realiza con los subárboles resultantes de aplicar recursivamente sobre ellos la sustitución. En el \lstinline|IfThenElse|, por ejemplo, son tres subárboles. Así, la sustitución se propaga hasta las hojas del árbol de la expresión, donde siempre se encuentran los valores concretos \verb|true|, \verb|false| o \verb|0| (de modo que se corta la sustitución sin producir efecto), o bien variables (donde la sustitución se realiza efectivamente, de corresponder el nombre de la variable).
+
+Ejemplo de hoja que no cambia:
+\begin{lstlisting}
+class BoolValue(Expression):
+   def substitute(self, var_name, expr):
+        return self
+\end{lstlisting}
+        
+Ejemplo de variable que sustituye:
+\begin{lstlisting}
+class Variable(Expression):
+    def substitute(self, var_name, expr):
+        return expr if var_name == self._name else self
+\end{lstlisting}
+
+Ejemplo un nodo no terminal:
+\begin{lstlisting}
+class Succ(Expression):
+    def substitute(self, var_name, expr):
+        return self._sub_expr.substitute(var_name, expr).succ()
+\end{lstlisting}
+        
+Allí se ve lo dicho en el párrafo anterior sobre el comportamiento de las hojas, y se ve un ejemplo de implementación de sustitución recursiva con rearmado del nodo actual (enviando el mensaje \lstinline|succ()| dentro de la clase \lstinline|Succ| se reconstruye el nodo haciendo chequeos de tipo y reducciones correspondientes).
+
+\subsection{Chequeo de tipos}
+
+Para poder verificar el tipado de las expresiones, todas ellas tienen un
+atributo que refleja el tipo que tienen asociado. Estos tipos están, a su
+vez, representados mediante objetos.
+
+Los tipos posibles son, naturalmente, \verb|Bool|, \verb|Nat|, y una
+aplicación entre dos tipos cualesquiera ($T_1\verb|->|T_2$). A estos se les
+suman lo que denominamos "variables de tipo", que nos permitirán representar
+el tipo asociado a aquellas expresiones que no lo tienen definido, por
+ejemplo, las variables libres. Si el tipo de una expresión es una variable
+de tipo, también diremos que su tipo es \verb|AnyType|. Por supuesto, la
+expresión resultante de evaluar una expresión cerrada no puede tener como
+tipo una variable de tipo.
+
+En otras palabras, el tipo de una expresión puede ser \verb|Bool|,
+\verb|Nat|, \verb|AnyType|, o un árbol originado a partir de combinar dos
+tipos más sencillos mediante una abstracción, y cuyas hojas son siempre
+alguno de los tres tipos básicos mencionados.
+
+En general, el tipo de una expresión se determina en el momento en que se
+construye su nodo en el árbol sintáctico. Algunos tipos se pueden determinar
+trivialmente; por ejemplo: \verb|0:Nat|, \verb|true:Bool|, o 
+\verb|x:AnyType|.
+
+Determinar otros tipos puede ser un poco más desafiante. Consideremos, por
+ejemplo, que se está por reducir según la producción
+$E \rightarrow \verb|if | E_1 \verb| then | E_2 \verb| else | E_3$. Para
+poder tipar la expresión $E$, es fundamental que $E_1$ tenga tipo
+\verb|Bool|. Sin embargo, el tipo de $E_1$ podría no definirse hasta más
+adelante en el proceso de parseo. Esto no es un motivo para rechazar la
+expresión: basta con que $E_1$ tenga un tipo que ``se lleve bien'' con el
+tipo \verb|Bool|, en el sentido de que sea factible que al continuar el
+parseo, $E_1$ finalice teniendo tipo \verb|Bool|. Si esto sucede,
+decimos que el tipo de $E_1$ \emph{unifica} con el tipo \verb|Bool|.
+Por ejemplo, \verb|AnyType| unifica con \verb|Bool|, pero \verb|Nat|
+claramente no unifica con \verb|Bool|.
+
+Esta noción de unificación está presente todo el tiempo durante los
+chequeos de tipado. Para continuar con la producción anterior, supongamos
+que efectivamente el tipo de $E_1$ unifica con \verb|Bool|. Necesitamos
+también que los tipos de $E_2$ y $E_3$ se ``lleven bien'', es decir, que
+unifiquen a algún tipo en común. En caso de que unifiquen, además, este
+tipo \emph{unificado} será el tipo correspondiente a la expresión $E$.
+
+En nuestra implementación, la unificación es implementada por
+todos los objetos que representan tipos: todos ellos son capaces de
+responder al mensaje \lstinline{unify_with(other_type)}, devolviendo el tipo
+que resulta de dicha unificación.
+El resultado de este proceso de unificación, dados dos tipos cualesquiera,
+queda definido recursivamente según lo indica la Tabla \ref{table:unificacion}.
+
+\begin{table} \centering
+\begin{tabular}{c|c|c|c|c}
+$\text{unificar}$   & \verb|AnyType| & \verb|Bool| & \verb|Nat|  & $T_1\verb|->|T_2$ \\ \hline
+\verb|AnyType|      & \verb|AnyType| & \verb|Bool| & \verb|Nat|  & $T_1\verb|->|T_2$ \\
+\verb|Bool|         &                & \verb|Bool| & no unifican & no unifican       \\
+\verb|Nat|          &                &             & \verb|Nat|  & no unifican       \\
+$T'_1\verb|->|T'_2$ &                &             &             &
+	$\text{unificar}(T_1,T'_1)\verb|->|\text{unificar}(T_2,T'_2)$ \\
+\end{tabular}
+\caption{Unificación de tipos (es conmutativa; se omiten las entradas
+	irrelevantes).}
+\label{table:unificacion}
+\end{table}
+
+Por lo que puede verse hasta ahora, en general el tipo de una expresión
+se sintetiza a partir de los tipos de sus subexpresiones. Esto es cierto, pero
+presenta una sutileza cuando se trabaja con abstracciones, debido a que estas
+ligan las variables a un tipo particular. Esto puede causar que el tipo de
+ciertas subexpresiones, que no estaba definido, pase a estarlo luego de ligar
+la variable.
+
+Por este motivo, al tipar una abstracción, es decir, al reducir según la
+producción $E \rightarrow \verb|\var:| T \verb|.| E_1$, el tipo de
+$E_1$ es recomputado reemplazando por $T$ el tipo de todas las apariciones de
+\verb|var|. En la implementación, esto se realiza ejecutando sobre el tipo de 
+$E_1$ el método $\verb|bind(var, |T\verb|)|$. Este proceso se propaga a través
+de los tipos de las subexpresiones, siempre y cuando la variable \verb|var|
+no vuelva a aparecer ligada más abajo en el árbol (lo cual detiene la
+propagación del método).\footnote{Para que esto sea posible, en 
+realidad, nuestra implementación debe contar con dos variantes de las
+variables de tipo: las variables de tipo anónimas (tipo \texttt{AnyType}) y
+las que tienen nombre (tipo \texttt{AnyType[name]}, donde \texttt{name} es el
+nombre de la variable). Almacenar el nombre de las variables de tipo que
+aparecen dentro de una abstracción es necesario para poder realizar
+correctamente el ligado de variables. Esto justifica, además, la elección del
+nombre \emph{variable} de tipo. No describimos con gran detalle este mecanismo
+porque lo consideramos un detalle implementativo que no resulta central.}
+
+
+Este mecanismo permite, efectivamente, tipar las expresiones de manera
+\emph{bottom-up}, a medida que van siendo construidas por el parser, y
+detectar errores de tipado tan pronto como es posible.
+
+% No mencioné las variables de tipos con nombres, me pareció que no valía la
+% pena. Después me cuentan qué les parece.
+
+\subsection{Manejo de errores}
+
+Para el manejo de errores, aprovechamos el mecanismo de excepciones de Python. Al encontrarnos con errores de tipado o de sintaxis, emitimos excepciones que burbujean por los árboles de expresión y de tipos. Estas excepciones son capturadas luego durante la ejecución del intérprete o de los tests, para ser convertidas en \emph{strings} y comunicadas al usuario.
 
 % - Descripción de cómo se implementó la solución, con decisiones que hayan
 %   tenido que tomar y justificación de las mismas.
@@ -133,6 +524,209 @@ $T'$ & $\rightarrow$ \qquad & \verb|type| \\
 % - Casos de prueba con expresiones sintácticamente correctas e incorrectas
 %   (al menos tres para cada caso).
 
+% IMPORTANTE: Faltan al menos tres tests de expresiones incorrectas.
+
+Además de los casos de prueba propuestos con el trabajo, planteamos casos
+adicionales, que nos permitieron verificar el funcionamiento correcto del
+intérprete ante distintos tipos de expresiones. En esta sección transcribimos
+estos casos, junto con el resultado esperado para cada uno.
+
+Todos los casos de prueba fueron implementados como tests unitarios con
+PyUnit, y pueden ser ejecutados desde el directorio en que se encuentra el
+código a través del comando
+\begin{center}\lstinline[language=bash]
+	{python -m unittest tests.TestsLambdaCalculus}.
+\end{center}
+
+\subsection{Casos básicos con \texttt{Nat}, \texttt{succ}, \texttt{pred}}
+\begin{enumerate}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|0|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|0:Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|succ(0)|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|succ(0):Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|pred(0)|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|0:Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|pred(succ(0))|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|0:Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|pred(pred(succ(succ(0))))|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|0:Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|4|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|succ(succ(succ(succ(0)))):Nat| \\
+    \end{itemize}
+\saveenum
+\end{enumerate}
+
+\subsection{Casos básicos con \texttt{Bool}}
+\begin{enumerate}
+\loadenum
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|true|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|true:Bool|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|false|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|false:Bool| \\
+    \end{itemize}
+\saveenum
+\end{enumerate}
+
+\subsection{Casos básicos con \texttt{iszero}}
+\begin{enumerate}
+\loadenum
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|iszero(0)|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|true:Bool|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|iszero(succ(0))|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|false:Bool|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|iszero(pred(succ(0)))|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|true:Bool|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|iszero(succ(x))|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|false:Bool| \\
+    \end{itemize}
+\saveenum
+\end{enumerate}
+
+\subsection{Casos con \texttt{if ... then ... else}}
+\begin{enumerate}
+\loadenum
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|if true then 0 else succ(0)|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|0:Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|if false then 0 else succ(0)|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|succ(0):Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|\x:Bool.if x then 0 else succ(0)|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|\x:Bool.if x then 0 else succ(0):Bool->Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|\x:Nat. if iszero(x) then 0 else 1|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|\x:Nat.if iszero(x) then 0 else succ(0):Nat->Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|(\x:Nat.\y:Nat.\z:Nat. if iszero(x) then y else z) 0 1 2|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|succ(0):Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|if if true then true else false then false else true|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|false:Bool|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|\x:Bool.if if x then true else false then false else true|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|\x:Bool.if if x then true else false then false else true:Bool->Bool| \\
+    \end{itemize}
+\saveenum
+\end{enumerate}
+
+\subsection{Casos con abstracciones}
+\begin{enumerate}
+\loadenum
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|\x:Bool.x|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|\x:Bool.x:Bool->Bool|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|\x:Nat.x|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|\x:Nat.x:Nat->Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|\x:Nat->Bool.x|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|\x:Nat->Bool.x:(Nat->Bool)->Nat->Bool|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|\x:Nat.\y:Bool.x|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|\x:Nat.\y:Bool.x:Nat->Bool->Nat| \\
+    \end{itemize}
+\saveenum
+\end{enumerate}
+
+\subsection{Casos con aplicaciones}
+\begin{enumerate}
+\loadenum
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|(\x:Nat.x) 0|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|0:Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|(\x:Bool.x) false|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|false:Bool|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|(\x:Nat.\x:Nat.succ(x)) 0|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|\x:Nat.succ(x):Nat->Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|((\x:Nat.\x:Nat.succ(x)) succ(0)) 0|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|succ(0):Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|(\x:Nat.\y:Nat.pred(y)) succ(0) 0|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|0:Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|\f:Nat->Nat.\x:Nat.f x|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|\f:Nat->Nat.\x:Nat.f x:(Nat->Nat)->Nat->Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|(\x:Nat->Nat.\y:Nat.x y) (\z:Nat.succ(z)) 0|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|succ(0):Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:}   \verb|\f:Nat->Bool.\x:Nat.if f x then 0 else 0:(Nat->Bool)->Nat->Nat|
+    \item \textsc{Resultado:} OK
+    \item \textsc{Salida:}    \verb|\f:Nat->Bool.\x:Nat.if f x then 0 else 0|
+    \end{itemize}
+\end{enumerate}
+
 % ============================================================================
 
 \section{Manual del usuario}
@@ -143,11 +737,45 @@ $T'$ & $\rightarrow$ \qquad & \verb|type| \\
 %   instrucciones para compilarlo, ejecutarlo, información de parámetros y
 %   lo que consideren necesario.
 
+Para poder ejecutar el intérprete, es necesario contar con un intérprete de
+Python. La implementación fue elaborada y testeada para la versión 2.7 del
+lenguaje. Las dependencias pueden ser fácilmente instaladas con el gestor de
+paquetes Pip, ejecutando el comando \lstinline[language=bash]
+{pip install -r requirements.txt} desde el directorio donde se encuentra el
+código.
+
+El comando de ejecución del intérprete es
+\begin{center}\lstinline[language=bash]
+	{python2.7 ./main.py [-i] [expresión]}
+\end{center}
+\noindent donde:
+
+\begin{itemize}
+\item \verb|expresión| representa la expresión de cálculo lambda que se
+	desea interpretar. En caso de no ser provista, el programa esperará que le
+    sea ingresada por medio de la entrada estándar.
+\item La opción \verb|-i| permite ejecutar el intérprete como una consola
+	interactiva, donde se pueden introducir múltiples comandos e ir recibiendo
+    los resultados.
+\end{itemize}
+
+Tras recibir una expresión, el programa intentará parsearla, evaluarla y
+tiparla. Si se obtiene un resultado con éxito, el mismo será devuelto por
+medio de la salida estándar. En caso de producirse algún inconveniente
+(ya sea por un error de sintaxis, de tipado, etc.), se imprimirá un mensaje
+explicativo por medio de la salida de error estándar; además, si el programa
+no está siendo usado en modo interactivo, la ejecución terminará con un código
+de salida de error.
+
 % ============================================================================
 
 \section{Conclusiones}
 
 % - Un resumen de los resultados obtenidos, y conclusiones del trabajo.
+
+% ============================================================================
+
+\printbibliography
 
 % ============================================================================
 
