@@ -133,6 +133,7 @@ class TypeVar(ExpType):
 class NamedTypeVar(TypeVar):
 
     def __init__(self, name):
+        super(NamedTypeVar, self).__init__(name)
         self._name = name
 
     def __str__(self):

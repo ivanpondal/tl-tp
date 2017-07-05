@@ -9,6 +9,7 @@ __all__ = ["Expression", "Zero", "BoolValue", "Abstraction", "Variable", "Succ"]
 class Expression(object):
     def __init__(self):
         self._free_vars = set()
+        self._type = TypeVar()
 
     def free_vars(self):
         return self._free_vars
@@ -75,7 +76,7 @@ class Abstraction(Expression):
             expr_arg.type().unify_with(self._var.type())
             return self._body_expr.substitute(str(self._var), expr_arg)
         except LambdaUnificationError:
-            raise LambdaTypeError("ERROR: Left part of application (" + str(left_expr) +
+            raise LambdaTypeError("ERROR: Left part of application (" + str(self) +
                                   ") is not a function of domain" + str(expr_arg.type()))
 
     def __str__(self):
@@ -117,7 +118,7 @@ class Variable(Expression):
         super(Variable, self).__init__()
         self._free_vars.add(name)
         self._name = name
-        self._type = NamedTypeVar(name) if var_type == None else var_type
+        self._type = NamedTypeVar(name) if var_type is None else var_type
 
     def __str__(self):
         return self._name

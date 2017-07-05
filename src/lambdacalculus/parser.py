@@ -1,5 +1,5 @@
 #! coding: utf-8
-"""Parser LR(1) de cálculo lambda."""
+"""Parser LALR de cálculo lambda."""
 import ply.yacc as yacc
 from . import LambdaError
 from .lexer import tokens
@@ -86,8 +86,8 @@ def p_error(p):
 # Build the parser
 parser = yacc.yacc(debug=True)
 
-def apply_parser(str):
-    return parser.parse(str)
+def apply_parser(string):
+    return parser.parse(string)
 
 
 class LambdaParseError(LambdaError):

@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2.7
 #! coding: utf-8
 
 from __future__ import print_function
@@ -16,12 +16,12 @@ opt_parser.add_option("-i", "--interactive", dest="interactive",
 options, args = opt_parser.parse_args()
 
 
-def input_exp(prompt="", exit_command=False):
+def input_exp(prompt="", exit_command=None):
     try:
         exp_str = raw_input(prompt)
     except EOFError:
-        return False
-    return exp_str if not exit_command or exp_str != exit_command else False
+        return None
+    return exp_str if exit_command is None or exp_str != exit_command else None
 
 
 def parse_and_print(exp_str):
@@ -37,14 +37,14 @@ def parse_and_print(exp_str):
 if options.interactive:
     while True:
         exp_str = input_exp(prompt="λ> ", exit_command=":q")
-        if exp_str:
+        if exp_str is not None:
             parse_and_print(exp_str)
         else:
             break
 else:
     exp_str = sys.argv[1] if len(sys.argv) > 1 else input_exp()
-    status = parse_and_print(exp_str)
-    if status:
-        exit(0)
-    else:
-        exit(1)
+    if exp_str is not None:
+        status = parse_and_print(exp_str)
+        if status:
+            exit(0)
+    exit(1)
