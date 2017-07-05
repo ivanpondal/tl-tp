@@ -16,12 +16,12 @@ opt_parser.add_option("-i", "--interactive", dest="interactive",
 options, args = opt_parser.parse_args()
 
 
-def input_exp(prompt=""):
+def input_exp(prompt="", exit_command=False):
     try:
         exp_str = raw_input(prompt)
     except EOFError:
         return False
-    return exp_str if exp_str != ":q" else False
+    return exp_str if not exit_command or exp_str != exit_command else False
 
 
 def parse_and_print(exp_str):
@@ -36,7 +36,7 @@ def parse_and_print(exp_str):
 
 if options.interactive:
     while True:
-        exp_str = input_exp(prompt="λ> ")
+        exp_str = input_exp(prompt="λ> ", exit_command=":q")
         if exp_str:
             parse_and_print(exp_str)
         else:
