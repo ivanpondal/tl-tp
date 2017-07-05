@@ -77,7 +77,7 @@ class Abstraction(Expression):
             return self._body_expr.substitute(str(self._var), expr_arg)
         except LambdaUnificationError:
             raise LambdaTypeError("ERROR: Left part of application (" + str(self) +
-                                  ") is not a function of domain" + str(expr_arg.type()))
+                                  ") is not a function of domain " + str(expr_arg.type()))
 
     def __str__(self):
         return '\\' + str(self._var) + ':' + str(self._var.type()) + '.' + str(self._body_expr)

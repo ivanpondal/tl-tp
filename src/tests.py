@@ -120,6 +120,44 @@ class TestsLambdaCalculus(TestCase):
     def test_application_as_boolean_expression(self):
         self.assertEquals('\\f:Nat->Bool.\\x:Nat.if f x then 0 else 0:(Nat->Bool)->Nat->Nat', str_parse('\\f:Nat->Bool.\\x:Nat.if f x then 0 else 0'))
 
+    # Wrong expression tests
+
+    def test_free_variable(self):
+        self.assertEquals('ERROR: Non-closed term (x is free)',
+                          str_parse('x'))
+
+    def test_free_variable_in_abstraction(self):
+         self.assertEquals('ERROR: Non-closed term (y is free)',
+                          str_parse('\\x:Nat->Nat.x y'))
+
+    def test_free_variable_with_same_name_as_bound_variable(self):
+        self.assertEquals('ERROR: Non-closed term (x is free)',
+                          str_parse('(\\x:Bool.x) x'))
+
+    def test_type_error_non_nat_succ_argument(self):
+        self.assertEquals('ERROR: succ expects a value of type Nat',
+                          str_parse('succ(false)'))
+
+    def test_type_error_non_boolean_condition(self):
+        self.assertEquals('ERROR: if condition should be of type Bool',
+                          str_parse('if 0 then true else false'))
+
+    def test_type_error_different_if_then_else_options(self):
+        self.assertEquals('ERROR: Both if options should have the same type',
+                          str_parse('if true then 0 else false'))
+
+    def test_type_error_applying_non_abstraction(self):
+        self.assertEquals('ERROR: Left part of application (0) is not a function of domain Nat',
+                          str_parse('0 0'))
+
+    def test_type_error_application_wrong_domain(self):
+        self.assertEquals('ERROR: Left part of application (\\x:Bool.x) is not a function of domain Nat',
+                          str_parse('(\\x:Bool.x) 0'))
+
+    def test_type_error_non_boolean_bound_condition(self):
+        self.assertEquals('ERROR: if condition should be of type Bool',
+                          str_parse('\\x:Nat.if x then 0 else 0'))
+
     # Examples provided in the task assignment
 
     def test_example_0(self):
