@@ -11,6 +11,8 @@
 
 \usepackage{amsmath,amssymb,amsthm,mathabx,mathtools}
 
+\usepackage{tikz}
+\usepackage{tikz-qtree}
 % ----------------------------------------------------------------------------
 % Code listings
 
@@ -226,18 +228,17 @@ La sintaxis del lenguaje fue formalizada mediante una gramática no ambigua,
 definiendo así las expresiones bien formadas y permitiendo reconocer su
 estructura.
 
-% OJO: Aclarar que si bien es una gramática de atributos, por claridad
-%      no vamos a escribir acá cuáles van a ser esos atributos. Eso va
-%      a quedar explicitado cuando hablemos de semántica y de implementación.
-% Piden decir de qué tipo es la gramática, no nos olvidemos de eso.
-% También hay que documentar bien qué cosas *no* se pueden hacer con esta
-% gramática (lambda/ifthenelse a la derecha de una aplicación) y por qué
-% decidimos que quede así.
+Dentro de la clasificación establecida por la jerarquía de Chomsky, esta
+gramática se encuentra dentro de las libres de contexto. Para esta sección
+obviaremos los atributos de la misma ya que serán discutidos al momento de
+explicar la implementación de la semántica.
+
+A continuación se presenta la definición de la misma:
 
 \[ \mathcal{G}_{\lambda} = \left\langle
-	\mathcal{V}_N,\ \mathcal{V}_T,\ \mathcal{P},\ S \right\rangle \]
+	\mathcal{V}_N,\ \mathcal{V}_T,\ \mathcal{P},\ E \right\rangle \]
 
-\[ \mathcal{V}_N = \left\lbrace S,\ E,\ E',\ A,\ T,\ T' \right\rbrace \]
+\[ \mathcal{V}_N = \left\lbrace E,\ E',\ A,\ T,\ T' \right\rbrace \]
 
 \[ \mathcal{V}_T = \left\lbrace
 	\verb|succ(|,\ \verb|pred(|,\ \verb|iszero(|,\ 
@@ -247,11 +248,8 @@ estructura.
     \right\rbrace \]
 
 \begin{figure}[H] \centering
-% TODO: Ver bien cómo ubicar estas figuras. Por ahí directamente hacer que
-%       dejen de ser figuras.
 \begin{tabular}{lrrl}
 $\mathcal{P}:$
-& $S$  & \produces     & $E$ \\
 & $E$  & \produces     & $\verb|if | E \verb| then | E \verb| else | E$ \\
 &      & \alsoproduces & $\verb|\var:| T \verb|.| E$ \\
 &      & \alsoproduces & $A$ \\
@@ -274,31 +272,21 @@ $\mathcal{P}:$
 \label{fig:gramatica}
 \end{figure}
 
-\begin{figure}[H] \centering
-\begin{tabular}{lrrl}
-$\mathcal{P}':$
-& $E$  & \produces     & $\verb|if | E \verb| then | E \verb| else | E$ \\
-&      & \alsoproduces & $\verb|\var:| T \verb|.| E$ \\
-&      & \alsoproduces & $A$ \\
-& $A$  & \produces     & $A \verb| | E'$ \\
-&      & \alsoproduces & $E'$ \\
-& $E'$ & \produces     & $\verb|(| E \verb|)|$ \\
-&      & \alsoproduces & $\verb|succ(| E \verb|)|$ \\
-&      & \alsoproduces & $\verb|pred(| E \verb|)|$ \\
-&      & \alsoproduces & $\verb|iszero(| E \verb|)|$ \\
-&      & \alsoproduces & $\verb|0|$ \\
-&      & \alsoproduces & $\verb|nat|$ \\
-&      & \alsoproduces & $\verb|bool|$ \\
-&      & \alsoproduces & $\verb|var|$ \\
-& $T$  & \produces     & $T' \verb|->| T$ \\
-&      & \alsoproduces & $T'$ \\
-& $T'$ & \produces     & $\verb|type|$ \\
-&      & \alsoproduces & $\verb|(| T \verb|)|$ \\
-\end{tabular}
-\caption{Producciones de la gramática original ($\mathcal{G}'_{\lambda}$).}
-\label{fig:gramatica-original}
-\end{figure}
+\subsubsection{Precedencia de operadores}
 
+De menor a mayor, la precedencia de los operadores quedó definida de la
+siguiente manera:
+
+\begin{itemize}
+  \item Condicional y abstracción
+  \item Aplicación
+  \item \verb|succ(|\emph{E}\verb|)|, \verb|iszero(|\emph{E}\verb|)|
+  \item \verb|0|, \verb|true|, \verb|false|
+\end{itemize}
+
+Se puede observar cómo esto es forzado por la gramática en la derivación
+
+\Tree [.E ]
 % ----------------------------------------------------------------------------
 
 \subsection{Análisis semántico: evaluación y tipos}
@@ -724,6 +712,57 @@ código a través del comando
     \item \textsc{Entrada:}   \verb|\f:Nat->Bool.\x:Nat.if f x then 0 else 0:(Nat->Bool)->Nat->Nat|
     \item \textsc{Resultado:} OK
     \item \textsc{Salida:}    \verb|\f:Nat->Bool.\x:Nat.if f x then 0 else 0|
+    \end{itemize}
+\saveenum
+\end{enumerate}
+
+\subsection{Casos de expresiones erróneas}
+\begin{enumerate}
+\loadenum
+\item \begin{itemize}\item \textsc{Entrada:} \verb|x|
+    \item \textsc{Resultado:} Error
+    \item \textsc{Salida:} \verb|ERROR: Non-closed term (x is free)|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:} \verb|\x:Nat->Nat.x y|
+    \item \textsc{Resultado:} Error
+    \item \textsc{Salida:} \verb|ERROR: Non-closed term (y is free)|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:} \verb|(\x:Bool.x) x|
+    \item \textsc{Resultado:} Error
+    \item \textsc{Salida:} \verb|ERROR: Non-closed term (x is free)|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:} \verb|succ(false)|
+    \item \textsc{Resultado:} Error
+    \item \textsc{Salida:} \verb|ERROR: succ expects a value of type Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:} \verb|if 0 then true else false|
+    \item \textsc{Resultado:} Error
+    \item \textsc{Salida:} \verb|ERROR: if condition should be of type Bool|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:} \verb|if true then 0 else false|
+    \item \textsc{Resultado:} Error
+    \item \textsc{Salida:} \verb|ERROR: Both if options should have the same type|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:} \verb|0 0|
+    \item \textsc{Resultado:} Error
+    \item \textsc{Salida:} \verb|ERROR: Left part of application (0) is not a function of domain Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:} \verb|(\x:Bool.x) 0|
+    \item \textsc{Resultado:} Error
+    \item \textsc{Salida:} \verb|ERROR: Left part of application (\x:Bool.x) is not a function of|
+    	\verb|domain Nat|
+    \end{itemize}
+\item \begin{itemize}
+    \item \textsc{Entrada:} \verb|'\x:Nat.if x then 0 else 0|
+    \item \textsc{Resultado:} Error
+    \item \textsc{Salida:} \verb|ERROR: if condition should be of type Bool|
     \end{itemize}
 \end{enumerate}
 
