@@ -63,7 +63,7 @@
 \submateria{Primer cuatrimestre de 2017}
 \titulo{Analizador sintáctico y semántico para $\lambda^{bn}$}
 \subtitulo{Trabajo práctico}
-\grupo{[FALTA NOMBRE DEL GRUPO]}
+\grupo{Inherentemente Ambiguos}
 
 \integrante{Franco Frizzo}{013/14}{francofrizzo@gmail.com}
 \integrante{Iván Pondal}{078/14}{ivan.pondal@gmail.com}
@@ -287,7 +287,7 @@ siguiente manera:
 En la Figura \ref{fig:derivacion_precedencia} podemos ver cómo la
 expresión \verb|"\x:Nat.(\z:Bool.z) true"| resulta en una derivación donde
 la gramática fuerza que la aplicación tenga mayor precedencia que la
-abstracción principal. Sin embargo, tenemos también el caso de una abstracción 
+abstracción principal. A su vez embargo, tenemos el caso de una abstracción 
 entre paréntesis, lo cual le permite ganar precedencia sobre la aplicación.
 
 Aquí cabe destacar una decisión que hubo que tomar respecto el orden de
@@ -392,7 +392,7 @@ expresión analizada esté correctamente tipada, y obtener el valor resultante
 de su evaluación. Para esto se tienen en cuenta, respectivamente, las reglas
 de tipado y la semántica de evaluación \emph{small-step} del cálculo lambda.
 
-Dado que el mecanismo mecanismo por el cual tiene lugar este análisis
+Dado que el mecanismo por el cual tiene lugar este análisis
 semántico está fuertemente relacionado con los detalles implementativos,
 dejamos su exposición detallada para la próxima sección.
 Por ahora, solo mencionaremos que a grandes rasgos, el análisis semántico se
@@ -417,7 +417,7 @@ se va llevando a cabo el análisis semántico.
 
 Como ya mencionamos anteriormente, implementamos el programa en Python,
 utilizando la herramienta \textsc{ply}. En esta sección, describimos a
-grandes rasgos ĺas características de esta implementación, enfocándonos
+grandes rasgos las características de esta implementación, enfocándonos
 principalmente en los desafíos que se nos presentaron y las decisiones más
 relevantes que fuimos tomando.
 
@@ -896,9 +896,23 @@ de salida de error.
 % ============================================================================
 
 \section{Conclusiones}
-
-
 % - Un resumen de los resultados obtenidos, y conclusiones del trabajo.
+En resumen, pudimos realizar con éxito la implementación de un intérprete de
+una pequeña versión del cálculo lambda tipado. Este proceso nos permitió
+comprender mejor las tareas que desempeñan cada uno de los componentes de un
+intérprete, diferenciando las responsabilidades correspondientes a los
+analizadores léxico, sintáctico y semántico.
+
+En el camino se abordó el trabajo con una herramienta que construye un parser \textsc{lalr} a través de una gramática que tuvimos que definir como no ambigua. Aunque esto resultó en una pequeña pérdida en el conjunto de construcciones válidas del lenguaje original, pudimos conservar la asociatividad y precedencia de los operadores.
+
+En cuanto al análisis semántico, pudimos experimentar con distintas formas
+de llevarlo a cabo, decantándonos finalmente por ir realizándolo a medida
+que tiene lugar el parseo, es decir, siendo dirigido por la sintaxis del
+lenguaje. A la hora de implementarlo, lo abordamos mediante un diseño en objetos que permitió a la vez tipar expresiones y hacer uso del mecanismo de excepciones para detectar errores de tipo y cortar la ejecución ante los mismos.
+
+Cabe notar que la inclusión de tests automatizados hizo que el trabajo de desarrollo fuera más ordenado y el software producido más robusto. Se hizo prontamente evidente la necesidad de los mismos.
+
+Por último, en un tono de reflexión final compartida unánimemente por todos los integrantes del grupo, consideramos que disfrutamos con la realización del presente trabajo, ya que no solo nos pareció pertinente y aplicable, sino que pudimos aprender mucho durante la realización del mismo.
 
 % ============================================================================
 
