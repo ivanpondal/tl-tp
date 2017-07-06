@@ -51,7 +51,8 @@ class BoolValue(Expression):
             if_true_expr.type().unify_with(if_false_expr.type())
             return if_true_expr if self._value else if_false_expr
         except LambdaUnificationError:
-            raise LambdaTypeError("ERROR: Both if options should have the same type")
+            raise LambdaTypeError("ERROR: Both if options should have the " +
+                                  "same type")
 
     def substitute(self, var_name, expr):
         return self
@@ -76,11 +77,14 @@ class Abstraction(Expression):
             expr_arg.type().unify_with(self._var.type())
             return self._body_expr.substitute(str(self._var), expr_arg)
         except LambdaUnificationError:
-            raise LambdaTypeError("ERROR: Left part of application (" + str(self) +
-                                  ") is not a function of domain " + str(expr_arg.type()))
+            raise LambdaTypeError("ERROR: Left part of application (" +
+                                   str(self) +
+                                   ") is not a function of domain " +
+                                   str(expr_arg.type()))
 
     def __str__(self):
-        return '\\' + str(self._var) + ':' + str(self._var.type()) + '.' + str(self._body_expr)
+        return '\\' + str(self._var) + ':' + str(self._var.type()) +
+               '.' + str(self._body_expr)
 
     def substitute(self, var_name, expr):
         return self if var_name == str(self._var) else \
@@ -96,8 +100,10 @@ class Application(Expression):
             abstraction_unified_type = left_expr.type().unify_with(
                 AbstractionType(right_expr.type(), TypeVar()))
         except LambdaUnificationError:
-            raise LambdaTypeError("ERROR: Left part of application (" + str(left_expr) +
-                                  ") is not a function of domain " + str(right_expr.type()))
+            raise LambdaTypeError("ERROR: Left part of application (" +
+                                  str(left_expr) +
+                                  ") is not a function of domain " +
+                                  str(right_expr.type()))
 
         super(Application, self).__init__()
         self._free_vars = left_expr.free_vars() | right_expr.free_vars()
@@ -238,11 +244,13 @@ class IfThenElse(Expression):
         try:
             unified_type = if_true_expr.type().unify_with(if_false_expr.type())
         except LambdaUnificationError:
-            raise LambdaTypeError("ERROR: Both if options should have the same type")
+            raise LambdaTypeError("ERROR: Both if options should have the " +
+                                  "same type")
 
         super(IfThenElse, self).__init__()
         self._condition = condition
-        self._free_vars = condition.free_vars() | if_true_expr.free_vars() | if_false_expr.free_vars()
+        self._free_vars = condition.free_vars() | if_true_expr.free_vars() |
+                          if_false_expr.free_vars()
         self._if_true_expr = if_true_expr
         self._if_false_expr = if_false_expr
         self._type = unified_type

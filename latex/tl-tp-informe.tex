@@ -3,6 +3,7 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage[spanish, es-tabla, activeacute]{babel}
+\spanishplainpercent
 
 \usepackage{lmodern}
 \usepackage[T1]{fontenc}
@@ -34,6 +35,10 @@
         {Á}{{\'A}}1{É}{{\'E}}1{Í}{{\'I}}1{Ó}{{\'O}}1{Ú}{{\'U}}1
         {ü}{{\"u}}1{Ü}{{\"U}}1{ñ}{{\~n}}1{Ñ}{{~N}}1,
     language=Python
+}
+\lstdefinestyle{numbered}{
+  numbers=left,
+  numberstyle=\ttfamily\scriptsize\color[gray]{0.4}
 }
 
 % ----------------------------------------------------------------------------
@@ -81,7 +86,8 @@
             left=2.53cm,
             right=2.3cm,
             top=3.2cm,
-            bottom=2.5cm]{geometry}
+            bottom=2.5cm,
+            headheight=14pt]{geometry}
 \usepackage{xcolor}
 \usepackage[colorlinks=true,
             linkcolor={blue!75!black},
@@ -917,6 +923,28 @@ Por último, en un tono de reflexión final compartida unánimemente por todos l
 % ============================================================================
 
 \printbibliography
+
+% ============================================================================
+
+\newpage
+\appendix
+\section*{Anexo: Código}
+
+\subsection*{\texttt{lexer.py}}
+\small
+\lstinputlisting[style=numbered]{../src/lambdacalculus/lexer.py}
+
+\subsection*{\texttt{parser.py}}
+\small
+\lstinputlisting[style=numbered]{../src/lambdacalculus/parser.py}
+
+\subsection*{\texttt{expression.py}}
+\small
+\lstinputlisting[style=numbered]{../src/lambdacalculus/expression.py}
+
+\subsection*{\texttt{exp\_type.py}}
+\small
+\lstinputlisting[style=numbered]{../src/lambdacalculus/exp_type.py}
 
 % ============================================================================
 
