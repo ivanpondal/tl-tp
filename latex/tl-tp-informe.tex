@@ -284,9 +284,104 @@ siguiente manera:
   \item \verb|0|, \verb|true|, \verb|false|
 \end{itemize}
 
-Se puede observar cómo esto es forzado por la gramática en la derivación
+En la Figura \ref{fig:derivacion_precedencia} podemos ver cómo la
+expresión \verb|"\x:Nat.(\z:Bool.z) true"| resulta en una derivación donde
+la gramática fuerza que la aplicación tenga mayor precedencia que la
+abstracción principal. Sin embargo, tenemos también el caso de una abstracción 
+entre paréntesis, lo cual le permite ganar precedencia sobre la aplicación.
 
-\Tree [.E ]
+Aquí cabe destacar una decisión que hubo que tomar respecto el orden de
+evaluación de los operadores. Estudiemos las siguientes expresiones:
+
+\begin{itemize}
+	\item \verb|(\x:Nat->Nat.x succ(0)) \y:Nat.pred(y)|
+	\item \verb|(\x:Nat.x) if iszero(0) then 0 else succ(0)|
+\end{itemize}
+
+Ambas son expresiones válidas, al evaluarse no quedan variables libres y
+el término resultante es un valor. Sin embargo, con nuestra gramática no
+es posible interpretarlas correctamente. Esto se debe al hecho de que la
+producción de la aplicación no permite una abstracción o condicional del
+lado derecho (salvo que se encuentre entre paréntesis). Si permitiéramos 
+eso la gramática quedaría ambigua (por ejempo la cadena sintácticamente
+válida \verb|(\x:Nat.x) 0 succ(0)| tendría más de un árbol de
+derivación posible).
+
+Dado que estas expresiones pueden evaluarse si se agregan los paréntesis
+decidimos mantener la gramática simple y no soportarlas en su estado
+conflictivo.
+
+\begin{figure}[H] \centering
+\begin{tikzpicture}
+\tikzset{level distance=32pt}
+\tikzset{edge from parent/.style = {
+    draw,
+    edge from parent path = {
+      (\tikzparentnode.south) -- +(0,-8pt) -| (\tikzchildnode)
+    },
+    thick
+  }
+}
+\Tree [.$E$ [.\texttt{\textbackslash} ]
+            [.\texttt{var} ]
+            [.\texttt{:} ]
+            [.$T$ [.$T'$ [.\texttt{type} ] ] ]
+            [.\texttt{.} ]
+            [.$E$ [.$A$ [.$A$ [.$E'$ [.\texttt{(} ] 
+                                     [.$E$ [.\texttt{\textbackslash} ] 
+                                           [.\texttt{var} ]
+                                           [.\texttt{:} ]
+                                           [.$T$ [.$T'$ [.\texttt{type} ] ] ]
+                                           [.\texttt{.} ]
+                                           [.$E$ [.$A$ [.$E'$ [.\texttt{var} ] ] ] ] ]
+                                     [.\texttt{)} ] ] ]
+                  [.$E'$ [.\texttt{bool} ] ] ] ] ]
+\end{tikzpicture}.
+\caption{Derivación de la cadena utilizando la gramática $\mathcal{G}_{\lambda}$.}
+\label{fig:derivacion_precedencia}
+\end{figure}
+
+\subsubsection{Asociatividad de operadores}
+
+En lo que respecta la asociatividad de los operadores, la gramática fue
+construida de forma tal que la aplicación asocie a izquierda y los tipos flecha
+a derecha.
+
+Para la aplicación, esto se logró obligando a que el término más a la derecha
+resuelva siempre en $E'$ permitiendo que lo que se encuentra a la izquierda
+continúe derivando.
+
+Los tipos flecha funcionan exactamente al revés. El término más a la izquierda
+se deriva con $T'$ mientras que el de la derecha puede seguir creciendo cuanto
+se desee. En la Figura \ref{fig:derivacion_asociativa_derecha} se presenta una
+derivación a modo ilustrativo.
+
+\begin{figure}[H] \centering
+\begin{tikzpicture}
+\tikzset{level distance=32pt}
+\tikzset{edge from parent/.style = {
+    draw,
+    edge from parent path = {
+      (\tikzparentnode.south) -- +(0,-8pt) -| (\tikzchildnode)
+    },
+    thick
+  }
+}
+\Tree [.$E$ [.\texttt{\textbackslash} ]
+            [.\texttt{var} ]
+            [.\texttt{:} ]
+            [.$T$ [.$T'$ ]
+                  [.\texttt{->} ]
+                  [.$T$ [.$T'$ ]
+                        [.\texttt{->} ]
+                        [.$T$ [.$T'$ [.\texttt{type} ] ] ] ] ]
+            [.\texttt{.} ] 
+            [.$E$ [.$A$ [.$E'$ [.\texttt{var} ] ] ] ] ]
+\end{tikzpicture}.
+\caption{Derivación de tipos flecha con su asociatividad a derecha.}
+\label{fig:derivacion_asociativa_derecha}
+\end{figure}
+
 % ----------------------------------------------------------------------------
 
 \subsection{Análisis semántico: evaluación y tipos}
@@ -312,6 +407,12 @@ se va llevando a cabo el análisis semántico.
 
 % ============================================================================
 
+% - Descripción de cómo se implementó la solución, con decisiones que hayan
+%   tenido que tomar y justificación de las mismas.
+% - El código de la solución, y, si se usaron herramientas generadoras de
+%   código, imprimir la fuente ingresada a la herramienta, no el código
+%   generado (ver si dejar esto para un anexo).
+
 \section{Implementación}
 
 Como ya mencionamos anteriormente, implementamos el programa en Python,
@@ -321,9 +422,7 @@ principalmente en los desafíos que se nos presentaron y las decisiones más
 relevantes que fuimos tomando.
 
 \subsection{Estrategia inicial descartada}
-% Cuidado con esto: fue exactamente lo que Juan Manuel dijo que esperaban
-% que hiciéramos. No sé si dejaría esta parte.
-En principio, encaramos la solución tomando un ejemplo de \textsc{ply} en el que se construía un árbol de objetos que representaba el \textsc{ast} completo sin reducir de la expresión de entrada, hasta completarse la lectura de la cadena. La idea era que en ese momento se gatillaría la reducción y chequeo final de tipos. Sin embargo, revisamos esto tras diversas consultas, antes de haber producido un avance significativo. Optamos por un enfoque más similar a lo visto en la materia, utilizado con gramáticas de atributos.
+En principio, encaramos la solución tomando un ejemplo de la documentación de  \textsc{ply}\cite{ply-docs} en el que se construía un árbol de objetos que representaba el \textsc{ast} completo sin reducir de la expresión de entrada, hasta completarse la lectura de la cadena. La idea era que en ese momento se gatillaría la reducción y chequeo final de tipos. Sin embargo, revisamos esto tras diversas consultas, antes de haber producido un avance significativo. Optamos por un enfoque más similar a lo visto en la materia, utilizado con gramáticas de atributos.
 
 \subsection{Evaluación de expresiones}
 \label{sec:reduccion}
@@ -405,10 +504,10 @@ vez, representados mediante objetos.
 
 Los tipos posibles son, naturalmente, \verb|Bool|, \verb|Nat|, y una
 aplicación entre dos tipos cualesquiera ($T_1\verb|->|T_2$). A estos se les
-suman lo que denominamos "variables de tipo", que nos permitirán representar
+suman lo que denominamos "variables de tipo", que nos permiten representar
 el tipo asociado a aquellas expresiones que no lo tienen definido, por
 ejemplo, las variables libres. Si el tipo de una expresión es una variable
-de tipo, también diremos que su tipo es \verb|AnyType|. Por supuesto, la
+de tipo, diremos también que su tipo es \verb|AnyType|. Por supuesto, la
 expresión resultante de evaluar una expresión cerrada no puede tener como
 tipo una variable de tipo.
 
@@ -487,23 +586,13 @@ correctamente el ligado de variables. Esto justifica, además, la elección del
 nombre \emph{variable} de tipo. No describimos con gran detalle este mecanismo
 porque lo consideramos un detalle implementativo que no resulta central.}
 
-
 Este mecanismo permite, efectivamente, tipar las expresiones de manera
 \emph{bottom-up}, a medida que van siendo construidas por el parser, y
 detectar errores de tipado tan pronto como es posible.
 
-% No mencioné las variables de tipos con nombres, me pareció que no valía la
-% pena. Después me cuentan qué les parece.
-
 \subsection{Manejo de errores}
 
 Para el manejo de errores, aprovechamos el mecanismo de excepciones de Python. Al encontrarnos con errores de tipado o de sintaxis, emitimos excepciones que burbujean por los árboles de expresión y de tipos. Estas excepciones son capturadas luego durante la ejecución del intérprete o de los tests, para ser convertidas en \emph{strings} y comunicadas al usuario.
-
-% - Descripción de cómo se implementó la solución, con decisiones que hayan
-%   tenido que tomar y justificación de las mismas.
-% - El código de la solución, y, si se usaron herramientas generadoras de
-%   código, imprimir la fuente ingresada a la herramienta, no el código
-%   generado (ver si dejar esto para un anexo).
 
 % ============================================================================
 
@@ -511,8 +600,6 @@ Para el manejo de errores, aprovechamos el mecanismo de excepciones de Python. A
 
 % - Casos de prueba con expresiones sintácticamente correctas e incorrectas
 %   (al menos tres para cada caso).
-
-% IMPORTANTE: Faltan al menos tres tests de expresiones incorrectas.
 
 Además de los casos de prueba propuestos con el trabajo, planteamos casos
 adicionales, que nos permitieron verificar el funcionamiento correcto del
@@ -760,7 +847,7 @@ código a través del comando
     	\verb|domain Nat|
     \end{itemize}
 \item \begin{itemize}
-    \item \textsc{Entrada:} \verb|'\x:Nat.if x then 0 else 0|
+    \item \textsc{Entrada:} \verb|\x:Nat.if x then 0 else 0|
     \item \textsc{Resultado:} Error
     \item \textsc{Salida:} \verb|ERROR: if condition should be of type Bool|
     \end{itemize}
@@ -809,6 +896,7 @@ de salida de error.
 % ============================================================================
 
 \section{Conclusiones}
+
 
 % - Un resumen de los resultados obtenidos, y conclusiones del trabajo.
 
