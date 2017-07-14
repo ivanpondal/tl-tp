@@ -77,9 +77,8 @@ def p_type_prime_parenthesis(p):
 def p_error(p):
     if p:
         spaces = ' ' * (p.lexpos + 3) # 3 is the prompt length
-        raise LambdaParseError("{0}^\n{0}|\n{0}|\nERROR: Unexpected token " +
-                               "'{1}' at position {2}".\
-                               format(spaces, p.value, p.lexpos))
+        raise LambdaParseError("{0}^\n{0}|\n{0}|\nERROR: Unexpected token '{1}' at position {2}".\
+            format(spaces, p.value, p.lexpos))
     else:
         raise LambdaParseError("ERROR: Unexpected end of expression")
 
