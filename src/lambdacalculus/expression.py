@@ -1,7 +1,7 @@
 #! coding: utf-8
 
 from . import LambdaError
-from exp_type import *
+from .exp_type import *
 
 __all__ = ["Expression", "Zero", "BoolValue", "Abstraction", "Variable", "Succ"]
 
