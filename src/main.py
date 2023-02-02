@@ -1,7 +1,5 @@
-#! /usr/bin/env python2.7
-#! coding: utf-8
+#!/usr/bin/env python3
 
-from __future__ import print_function
 from lambdacalculus import parser, LambdaError
 import sys, readline, optparse
 
@@ -18,7 +16,7 @@ options, args = opt_parser.parse_args()
 
 def input_exp(prompt="", exit_command=None):
     try:
-        exp_str = raw_input(prompt)
+        exp_str = input(prompt)
     except EOFError:
         return None
     return exp_str if exit_command is None or exp_str != exit_command else None

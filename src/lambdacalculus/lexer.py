@@ -1,7 +1,7 @@
 #! coding: utf-8
 import ply.lex as lex
-from expression import *
-from exp_type import *
+from .expression import *
+from .exp_type import *
 from . import LambdaError
 
 """

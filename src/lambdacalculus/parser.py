@@ -3,8 +3,8 @@
 import ply.yacc as yacc
 from . import LambdaError
 from .lexer import tokens
-from expression import *
-from exp_type import *
+from .expression import *
+from .exp_type import *
 
 def p_expression_ifthenelse(p):
     'expression : IF expression THEN expression ELSE expression'
